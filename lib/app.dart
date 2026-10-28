@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 /// Root widget: app name and the Material 3 light and dark themes.
 class ShuffleAlarmApp extends StatelessWidget {
-  const ShuffleAlarmApp({super.key});
+  const new({super.key});
 
   /// Shown in the app bar, the browser tab and the OS task switcher.
   static const title = 'Shuffle Alarm';
@@ -27,7 +27,7 @@ class ShuffleAlarmApp extends StatelessWidget {
 
 /// Placeholder until the app shell with tabs (PLAN.md task 0.3).
 class _HomePage extends StatelessWidget {
-  const _HomePage();
+  const new();
 
   @override
   Widget build(BuildContext context) {
