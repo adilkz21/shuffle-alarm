@@ -3,8 +3,11 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-/// Flutter itself, any `flutter*` package, or the engine's `dart:ui`.
-final _flutterUri = RegExp(r'''['"](package:flutter\w*/|dart:ui)''');
+/// Flutter itself, any `flutter*` package, the Material and Cupertino
+/// packages, or the engine's `dart:ui`.
+final _flutterUri = RegExp(
+  r'''['"](package:(flutter\w*|material_ui|cupertino_ui)/|dart:ui)''',
+);
 
 /// Any app file outside `lib/core/`.
 final _appUriOutsideCore = RegExp('''['"]package:shuffle_alarm/(?!core/)''');
@@ -33,6 +36,7 @@ void main() {
       flags(_flutterUri, 'package:flutter_riverpod/riverpod.dart'),
       isTrue,
     );
+    expect(flags(_flutterUri, 'package:material_ui/material_ui.dart'), isTrue);
     expect(flags(_flutterUri, 'dart:ui'), isTrue);
     expect(flags(_flutterUri, 'dart:math'), isFalse);
 

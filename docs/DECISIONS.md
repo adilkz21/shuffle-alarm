@@ -24,8 +24,22 @@ If a later entry replaces an earlier one, mark the old one "Replaced by Dn" inst
 - **Why:** these CLAUDE.md rules are easy to break by accident, and lints can't check them.
 - **Affects:** new code in `lib/core/` and `lib/features/`. Empty folders hold a `.gitkeep` file until real files arrive.
 
+### D4 · 2026-10-29 · Navigation with go_router (task 0.3)
+- **Decision:** go_router with `StatefulShellRoute.indexedStack`. Alarms, Library and Insights are bottom tabs that keep their own state and history; Settings opens over the tabs. The router lives in a Riverpod provider (`routerProvider` in `lib/router.dart`), and page paths are listed once in `AppRoute` (`lib/routes.dart`). The web build keeps Flutter's default hash URLs (`/#/alarms`). Unknown URLs open Alarms, and Settings opened straight from a URL gets a Back button to Alarms.
+- **Why:** each tab keeps its place when you switch. Hash URLs work on GitHub Pages without server rewrites (task 0.4), so reloading a page or opening a shared link never ends in a 404.
+- **Affects:** every screen. A new page gets an `AppRoute` value and a route in `lib/router.dart`; a new tab also needs a destination in `lib/app_shell.dart` at the same position as its branch.
+
+### D5 · 2026-10-29 · Material from the material_ui package (task 0.3)
+- **Decision:** UI code imports `package:material_ui/material_ui.dart`, not `package:flutter/material.dart`. The switch was made with the official `dart fix --apply --code=migrate_design_widgets`.
+- **Why:** Flutter moved Material into its own package. go_router 18 uses it and only recognizes that package's `MaterialApp`; with the old import it would fall back to plain pages without Material transitions. One Material copy also keeps theme lookups consistent.
+- **Affects:** all UI code. If a package we add still uses `package:flutter/material.dart`, wrap its widgets in `MaterialUiCompatibilityBridge` (see the material_ui README). The architecture test counts `material_ui` and `cupertino_ui` as Flutter, so `lib/core/` can't import them.
+
 ## Limits
 
 ### L1 · 2026-10-28 · Building on Windows
 - iOS and macOS apps can only be built, signed and tested on a Mac with Xcode (Phases 5, 6 and 8).
 - On Windows, Flutter plugins need Developer Mode (they use symlinks). Turn it on before Phase 2 adds the first plugins.
+
+### L2 · 2026-10-29 · flutter_riverpod is not tagged for web on pub.dev
+- `flutter_riverpod` 3.x depends on `flutter_test`, which imports `dart:io`, so pub.dev marks it "not compatible with Web". The web compiler still builds `dart:io` imports (calling them would fail at runtime), and the app never calls them. Checked in task 0.3: the web release build compiles and runs.
+- If a future version really breaks the web, pin the last working version.

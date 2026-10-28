@@ -33,6 +33,10 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter:
     sdk: flutter
+  flutter_riverpod: ^3.4.3
+  go_router: ^18.1.1
+  # Material now ships as its own package; go_router uses it too.
+  material_ui: ^1.8.0
 
 dev_dependencies:
   flutter_test:

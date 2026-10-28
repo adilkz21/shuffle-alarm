@@ -1,20 +1,28 @@
-import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:shuffle_alarm/app.dart';
 
+Future<void> _startApp(WidgetTester tester) async {
+  await tester.pumpWidget(const ProviderScope(child: ShuffleAlarmApp()));
+  await tester.pumpAndSettle();
+}
+
+ThemeData _themeOnScreen(WidgetTester tester) =>
+    Theme.of(tester.element(find.byType(Scaffold).first));
+
 void main() {
-  testWidgets('shows the app name', (tester) async {
-    await tester.pumpWidget(const ShuffleAlarmApp());
+  testWidgets('is called Shuffle Alarm', (tester) async {
+    await _startApp(tester);
 
     final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
     expect(app.title, 'Shuffle Alarm');
-    expect(find.text('Shuffle Alarm'), findsOneWidget);
   });
 
   testWidgets('uses a Material 3 light theme by default', (tester) async {
-    await tester.pumpWidget(const ShuffleAlarmApp());
+    await _startApp(tester);
 
-    final theme = Theme.of(tester.element(find.byType(Scaffold)));
+    final theme = _themeOnScreen(tester);
     expect(theme.useMaterial3, isTrue);
     expect(theme.brightness, Brightness.light);
   });
@@ -23,9 +31,9 @@ void main() {
     tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;
     addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
 
-    await tester.pumpWidget(const ShuffleAlarmApp());
+    await _startApp(tester);
 
-    final theme = Theme.of(tester.element(find.byType(Scaffold)));
+    final theme = _themeOnScreen(tester);
     expect(theme.useMaterial3, isTrue);
     expect(theme.brightness, Brightness.dark);
   });
