@@ -50,7 +50,7 @@ The roadmap and task checklist live in `PLAN.md`. Run `/next-task` to work on th
 - If a task touches 2+ files, propose a short plan first and wait for approval.
 - Write tests first for everything in `lib/core/`.
 - A task is done only when `flutter analyze` is clean, `flutter test` passes, the task's "Done when" check is met with evidence shown, and its checkbox in `PLAN.md` is ticked.
-- Commit after each task: `type(scope): summary`, e.g. `feat(rotation): add shuffle bag`.
+- Commit after each task: `type(scope): summary`, e.g. `feat(rotation): add shuffle bag`. Then push to `main` (agreed with the user) and check that the CI run is green. CI (`.github/workflows/ci.yml`) checks every push; a green push to `main` publishes the web test version at https://adilkz21.github.io/shuffle-alarm/.
 - Never commit secrets, signing keys or user audio.
 - If a requirement is unclear or a platform limit blocks it, stop and ask. Record decisions and limits in `docs/DECISIONS.md`.
 

@@ -39,6 +39,11 @@ If a later entry replaces an earlier one, mark the old one "Replaced by Dn" inst
 - **Why:** the app should be easy on the eyes and not look like every other Material app. Alarms are set at night and stopped half-asleep, so dark mode is deep and warm instead of blue-white. `test/ui/theme_test.dart` keeps every text color at WCAG AA (4.5:1) on every part of the sky. The fonts are bundled so the app never contacts a font server (local-first, works offline).
 - **Affects:** every screen: take colors and text styles from the theme, never hard-coded hex values. The Credits screen (task 3.6) must list Fraunces and Manrope (OFL); `addFontLicenses()` already puts both on Flutter's licenses page.
 
+### D7 · 2026-10-29 · CI and the live web version on GitHub Pages (task 0.4)
+- **Decision:** a public repo, `adilkz21/shuffle-alarm`, with one workflow, `.github/workflows/ci.yml`. Every push runs a `dart format` check, `flutter analyze` and `flutter test` on Ubuntu with Flutter 3.47.8 and the lockfile enforced. A push to `main` that passes them builds the web app with the repo name as base href and deploys it to GitHub Pages: https://adilkz21.github.io/shuffle-alarm/. Runs on `main` wait for each other instead of cancelling, so a deploy is never cut off halfway.
+- **Why:** Pages and Actions minutes are free for public repos, so no second hosting account or secret is needed. The same Flutter version and locked packages mean CI checks exactly what was tested locally. Only the deploy job gets the Pages permissions, and it runs no third-party code; the third-party `subosito/flutter-action` is pinned to a commit. Hash URLs (D4) need no 404 rewrites on Pages.
+- **Affects:** every push: a red check means the site is not updated. Change `FLUTTER_VERSION` in the workflow together with the dev machine's Flutter. The action versions were the newest on 2026-10-29; check them when a run warns about deprecations. Code and commit authors are public.
+
 ## Limits
 
 ### L1 · 2026-10-28 · Building on Windows
