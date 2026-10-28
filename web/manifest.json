@@ -1,0 +1,35 @@
+{
+    "name": "Shuffle Alarm",
+    "short_name": "Shuffle Alarm",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#F2994A",
+    "theme_color": "#F2994A",
+    "description": "An alarm clock that plays a different sound every 30 seconds until you get up.",
+    "orientation": "portrait-primary",
+    "prefer_related_applications": false,
+    "icons": [
+        {
+            "src": "icons/Icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-maskable-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "icons/Icon-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}

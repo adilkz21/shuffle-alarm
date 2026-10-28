@@ -1,0 +1,15 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "web",
+      "runtimeExecutable": "powershell.exe",
+      "runtimeArgs": [
+        "-NoProfile",
+        "-Command",
+        "$env:PATH = 'C:\\Program Files\\Git\\cmd;' + $env:USERPROFILE + '\\develop\\flutter\\bin;' + $env:PATH; flutter run -d web-server --release --web-hostname localhost --web-port 8123"
+      ],
+      "port": 8123
+    }
+  ]
+}
