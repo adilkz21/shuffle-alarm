@@ -1,6 +1,8 @@
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:shuffle_alarm/routes.dart';
+import 'package:shuffle_alarm/ui/dawn_page.dart';
+import 'package:shuffle_alarm/ui/empty_state.dart';
 
 /// The Settings page, opened over the tabs. A placeholder for now.
 class SettingsScreen extends StatelessWidget {
@@ -8,16 +10,19 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-        // Opened straight from a URL (say, after a reload on the web) there is
-        // no page underneath, so Back goes to Alarms instead.
-        leading: context.canPop()
-            ? null
-            : BackButton(onPressed: () => context.go(AppRoute.alarms.path)),
+    return DawnPage(
+      title: 'Settings',
+      subtitle: 'Tune how you wake up',
+      // Opened straight from a URL (say, after a reload on the web) there is
+      // no page underneath, so Back goes to Alarms instead.
+      leading: context.canPop()
+          ? null
+          : BackButton(onPressed: () => context.go(AppRoute.alarms.path)),
+      body: const EmptyState(
+        icon: Icons.tune_rounded,
+        title: 'Make it yours',
+        message: 'Snooze length, ring time and more will live here.',
       ),
-      body: const Center(child: Text('Settings will appear here.')),
     );
   }
 }

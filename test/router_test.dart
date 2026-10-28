@@ -38,7 +38,7 @@ void main() {
     await _startApp(tester);
 
     expect(_title('Alarms'), findsOneWidget);
-    expect(find.text('No alarms yet.'), findsOneWidget);
+    expect(find.text('No alarms yet'), findsOneWidget);
     for (final label in ['Alarms', 'Library', 'Insights']) {
       expect(_tab(label), findsOneWidget);
     }

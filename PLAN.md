@@ -49,6 +49,7 @@ Goal: the empty app builds and the web test version is online.
 - [x] 0.2 Strict lints (`very_good_analysis` or `flutter_lints`), the folder structure from CLAUDE.md, and `docs/DECISIONS.md`.
 - [x] 0.3 App shell with go_router and Riverpod: bottom tabs Alarms, Library, Insights, plus a Settings page.
 - [ ] 0.4 GitHub repo + GitHub Actions: every push runs `flutter analyze` and `flutter test`; every push to `main` builds the web app and deploys it (GitHub Pages for a public repo; Cloudflare Pages or Firebase Hosting for a private repo).
+- [x] 0.5 Visual identity "Dawn": own night and morning palette, bundled fonts (Fraunces, Manrope), floating tab bar, large titles, illustrated empty states; text contrast checked by a test.
 
 Done when: CI is green and the app shell opens at the live URL.
 
@@ -146,6 +147,7 @@ Done when: testers can install the app on every platform.
 - 2026-10-28 · 0.1 · Flutter 3.47.8 app for 6 platforms (org `com.adilz`), Material 3 light/dark theme, "Shuffle Alarm" name on every platform; iOS/macOS name changes not checked until a Mac build.
 - 2026-10-29 · 0.2 · `very_good_analysis` 11.0.0 (rule set locked, `public_member_api_docs` off), CLAUDE.md folder layout, `test/architecture_test.dart` guarding core/features imports, `docs/DECISIONS.md` started (D1–D3, L1).
 - 2026-10-29 · 0.3 · App shell: go_router 18 tabs Alarms/Library/Insights (keep state), Settings on top, hash URLs, unknown URL → Alarms; router in a Riverpod provider; switched to the `material_ui` package (D4, D5, L2). Checked in the web release build.
+- 2026-10-29 · 0.5 · "Dawn" look (D6): night/morning palette, Fraunces + Manrope bundled with OFL, floating tab bar, sunrise empty states, WCAG AA contrast test. Done before 0.4 at the user's request.
 
 ## References
 - Unfamiliar voices in sleep: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8896625/

@@ -34,6 +34,11 @@ If a later entry replaces an earlier one, mark the old one "Replaced by Dn" inst
 - **Why:** Flutter moved Material into its own package. go_router 18 uses it and only recognizes that package's `MaterialApp`; with the old import it would fall back to plain pages without Material transitions. One Material copy also keeps theme lookups consistent.
 - **Affects:** all UI code. If a package we add still uses `package:flutter/material.dart`, wrap its widgets in `MaterialUiCompatibilityBridge` (see the material_ui README). The architecture test counts `material_ui` and `cupertino_ui` as Flutter, so `lib/core/` can't import them.
 
+### D6 · 2026-10-29 · The "Dawn" look (task 0.5)
+- **Decision:** a hand-picked palette instead of Material's generated one: a violet night sky with a warm apricot sun in dark mode, a soft peach morning in light mode (`lib/ui/theme.dart`). Fraunces (a soft serif) for titles and big numbers, Manrope for everything else, both bundled as variable fonts in `assets/fonts/` with their OFL licenses. Pages build on `DawnPage` (sky background, large title) and `EmptyState` (a sunrise illustration drawn in code). The tab bar floats as a rounded card, at most 480 px wide.
+- **Why:** the app should be easy on the eyes and not look like every other Material app. Alarms are set at night and stopped half-asleep, so dark mode is deep and warm instead of blue-white. `test/ui/theme_test.dart` keeps every text color at WCAG AA (4.5:1) on every part of the sky. The fonts are bundled so the app never contacts a font server (local-first, works offline).
+- **Affects:** every screen: take colors and text styles from the theme, never hard-coded hex values. The Credits screen (task 3.6) must list Fraunces and Manrope (OFL); `addFontLicenses()` already puts both on Flutter's licenses page.
+
 ## Limits
 
 ### L1 · 2026-10-28 · Building on Windows

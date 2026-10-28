@@ -1,5 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:shuffle_alarm/features/settings/settings_button.dart';
+import 'package:shuffle_alarm/ui/dawn_page.dart';
+import 'package:shuffle_alarm/ui/empty_state.dart';
 
 /// The Insights tab. A placeholder until the morning stats (PLAN.md task 2.8).
 class InsightsScreen extends StatelessWidget {
@@ -7,12 +9,15 @@ class InsightsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Insights'),
-        actions: const [SettingsButton()],
+    return const DawnPage(
+      title: 'Insights',
+      subtitle: 'How your mornings went',
+      actions: [SettingsButton()],
+      body: EmptyState(
+        icon: Icons.insights_rounded,
+        title: 'Mornings in numbers',
+        message: 'After your first alarm, you’ll see how fast you got up.',
       ),
-      body: const Center(child: Text('Your mornings will show up here.')),
     );
   }
 }

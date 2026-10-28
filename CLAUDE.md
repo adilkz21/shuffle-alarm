@@ -32,6 +32,7 @@ The roadmap and task checklist live in `PLAN.md`. Run `/next-task` to work on th
 - `lib/data/`: drift database, repositories, library loader for `manifest.json`.
 - `lib/platform/`: `AlarmScheduler` and `SoundPlayer` interfaces + `android/`, `ios/`, `desktop/`, `web/` implementations.
 - `lib/features/`: `alarms/`, `ringing/`, `library/`, `voice/`, `insights/`, `settings/`.
+- `lib/ui/`: the "Dawn" look (colors, fonts) and shared widgets such as `DawnPage` and `EmptyState`. Screens take colors and text styles from the theme, never hard-coded hex values (see `docs/DECISIONS.md` D6).
 - `assets/library/<genre>/`: audio clips + `manifest.json`. `tool/`: dev scripts. `test/` mirrors `lib/`.
 - Features never call platform code directly, only through the interfaces.
 
