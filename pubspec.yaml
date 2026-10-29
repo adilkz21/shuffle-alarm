@@ -28,6 +28,8 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+  # Set and list equality for the models in lib/core (pure Dart).
+  collection: ^1.19.1
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
@@ -37,6 +39,8 @@ dependencies:
   go_router: ^18.1.1
   # Material now ships as its own package; go_router uses it too.
   material_ui: ^1.8.0
+  # @immutable for the models in lib/core (pure Dart).
+  meta: ^1.18.3
 
 dev_dependencies:
   flutter_test:
