@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/adilkz21/shuffle-alarm/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/adilkz21/shuffle-alarm/actions/workflows/ci.yml)
 
-An alarm clock that wakes you with a rotating set of different sounds. Each sound plays for at most 30 seconds, then the next one starts, until you tap Stop or Snooze.
+An alarm clock that wakes you with a rotating set of different sounds: each one plays for at most 30 seconds, then the next one starts. You can't just tap Stop: alone, you stop it with a short wake-up task; in a squad of friends, it stops only when everyone is up.
 
 One Flutter codebase for web, Android, iOS, macOS, Windows and Linux. The web version is the test version.
 

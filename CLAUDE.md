@@ -1,13 +1,15 @@
 # Shuffle Alarm
 
-Cross-platform alarm clock that wakes people with a rotating set of different sounds.
+Cross-platform alarm clock that wakes people with a rotating set of different sounds and won't let them just tap Stop: alone, a short wake-up task stops it; in a squad, it stops only when everyone is up.
 Working title "Shuffle Alarm", package `shuffle_alarm` (rename later if needed).
 The plan lives in `PLAN.md`: short stages, each asking one question and ending with a test on real people. Run `/next-task` to work on the next task of the current stage.
 
 ## Product rules (never break)
 - UI text is English only. Do not add localization.
 - One sound plays for at most 30 s. When it ends, the next sound starts immediately.
-- The alarm keeps rotating until Stop or Snooze. Total cap: 10 min (setting), then it stops and is logged as "missed".
+- The alarm keeps rotating until it is stopped or snoozed. Total cap: 10 min (setting), then it stops and is logged as "missed".
+- Stopping takes a wake-up task (alone) or every squad mate's code (squad). Nothing locks anyone in: the cap still ends the ring, holding Stop for 5 s is an emergency stop that always works and is logged, and every task has an easier fallback for people who can't hear or move well.
+- Squads work without accounts or a server: members join by link or QR code, and each device computes the codes from the squad's shared secret.
 - Bundled clips are cut to max 29 s, because iOS AlarmKit only accepts alarm sounds shorter than 30 s.
 - No copyrighted music. Every bundled audio file needs an entry in `assets/library/manifest.json` (title, artist, license, sourceUrl, attribution).
 - Allowed licenses for bundled audio: `original` (made by us), CC0, CC BY 4.0 (credit in the Credits screen), or a license that explicitly allows redistribution inside apps. Never CC BY-NC, CC BY-ND, or "free for videos only" licenses.
@@ -28,10 +30,10 @@ The plan lives in `PLAN.md`: short stages, each asking one question and ending w
 - Before adding any package: check pub.dev for platform support, recent releases and license. If it does not cover all 6 platforms, hide it behind an interface with a fallback.
 
 ## Architecture
-- `lib/core/`: pure Dart, no Flutter imports. Models, `RotationEngine`, clip rules, adaptive weights.
+- `lib/core/`: pure Dart, no Flutter imports. Models, the clip rule, the shuffle bag, the ring sequence, wake-up tasks, squad codes, adaptive weights.
 - `lib/data/`: drift database, repositories, library loader for `manifest.json`.
-- `lib/platform/`: `AlarmScheduler` and `SoundPlayer` interfaces + `android/`, `ios/`, `desktop/`, `web/` implementations.
-- `lib/features/`: `alarms/`, `ringing/`, `library/`, `voice/`, `insights/`, `settings/`.
+- `lib/platform/`: `AlarmScheduler`, `SoundPlayer` and `MotionSensor` interfaces + `android/`, `ios/`, `desktop/`, `web/` implementations.
+- `lib/features/`: `alarms/`, `ringing/`, `tasks/`, `squads/`, `library/`, `voice/`, `insights/`, `settings/`.
 - `lib/ui/`: the "Dawn" look (colors, fonts) and shared widgets such as `DawnPage` and `EmptyState`. Screens take colors and text styles from the theme, never hard-coded hex values (see `docs/DECISIONS.md` D6).
 - `assets/library/<genre>/`: audio clips + `manifest.json`. `tool/`: dev scripts. `test/` mirrors `lib/`.
 - Features never call platform code directly, only through the interfaces.
@@ -41,7 +43,7 @@ The plan lives in `PLAN.md`: short stages, each asking one question and ending w
 - `flutter run -d chrome` (web test version)
 - `dart format .`
 - `flutter analyze` (must report 0 issues)
-- `flutter test` (one file: `flutter test test/core/rotation_engine_test.dart`)
+- `flutter test` (one file: `flutter test test/core/shuffle_bag_test.dart`)
 - `flutter build web --release --base-href /<repo-name>/`
 - `dart run tool/check_licenses.dart` (audio license check, comes with the music library)
 

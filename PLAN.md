@@ -1,6 +1,6 @@
 # Shuffle Alarm — Plan
 
-An alarm that plays a different sound every 30 seconds until you get up. One Flutter codebase for web, Android, iOS, macOS, Windows and Linux; the web version is the test version.
+An alarm that won't let you just tap Stop and fall back asleep. A different sound plays every 30 seconds; alone, you stop it with a short wake-up task; in a squad of friends, it stops only when everyone is up. One Flutter codebase for web, Android, iOS, macOS, Windows and Linux; the web version is the test version.
 
 ## How we work
 We build in short stages. Each stage asks one question about how people wake up, builds only what it takes to answer it (1–2 weeks), and ends with a test on real people. What the test shows is written down in `docs/DECISIONS.md` as findings, and the findings decide the next stage. The current stage is planned in detail and the next one roughly; everything else is a list of questions to test later, not a promise. Why: `docs/DECISIONS.md` (D11).
@@ -27,19 +27,21 @@ Useful extras:
 - On your Mac: Xcode 26 or newer (iOS, macOS) and Android Studio (Android).
 - A GitHub account and Claude Code.
 - For phone tests: an Android phone or emulator, and an iPhone on iOS 26 or newer.
-- About 5 friends who agree to try the app; later stages may need more.
+- About 5 friends who agree to try the app, and for squads a few groups of 2–4 friends.
 
 ## Fixed rules
 | Topic | Rule |
 | --- | --- |
 | Stack | Flutter, one codebase for 6 platforms |
-| 30-second rule | Each sound plays max 30 s, then the next one starts; it rotates until Stop or Snooze; total cap 10 min (default) |
-| Snooze | 5 min (default, changeable) |
+| 30-second rule | Each sound plays max 30 s, then the next one starts; it rotates until the alarm is stopped or snoozed; total cap 10 min (default) |
+| Stopping | Alone: a short wake-up task. Squad: every squad mate's code. The cap and an emergency stop (hold Stop for 5 s) always end a ring (D12) |
+| Squads | 2–6 people who share an alarm; they join by link or QR code; no accounts, no server |
+| Snooze | 5 min (default, changeable); alone only, because a squad stops together |
 | Sounds | Only original or properly licensed audio (allowed licenses: CLAUDE.md) |
 | UI language | English only |
 | Data | Local-first: no accounts, nothing uploaded. Test results leave a device only when the tester copies or exports them |
 | Testers | Friends who agree to take part; we collect no names |
-| Order | By question: each stage ends with a test on real people (D11) |
+| Order | By question: each stage ends with a test on real people (D11); alone first, then squads (D12) |
 
 ## What studies suggest
 Starting points for our questions, not proof that a feature works for our users.
@@ -47,8 +49,10 @@ Starting points for our questions, not proof that a feature works for our users.
 - **Gentle start:** alarm sounds rated melodic were linked with less morning grogginess than neutral ones (McFarlane et al., PLOS ONE 2020, 50 people, self-report).
 - **Escalation:** a gradually rising alarm was linked with better morning mood in a 14-night home study (Yang, Cera & Pauletto, KTH).
 - **Voice messages:** a mother's-voice alarm woke 86–91% of children vs 53% for a tone alarm (Smith et al., J Pediatrics 2018, ages 5–12).
+- **Moving on waking:** a 30-second burst of exercise right after waking made people feel less sleepy, though it did not improve their test scores (lab study, 2021, 15 people).
 - **Adaptive rotation:** 55.6% of over 3 million tracked nights ended with snooze (Robbins et al., Scientific Reports 2025).
 - **Keep Snooze:** 30 min of snoozing did not hurt regular snoozers in a lab study (Sundelin et al., J Sleep Research 2023).
+- **Wake-up tasks such as math:** we found no study that tests whether they help people wake up. Our tests will show which tasks work.
 - **Same sound or rotation:** we found no study comparing "same sound every day" with "a new sound every morning". The app can collect that data.
 
 ---
@@ -69,52 +73,55 @@ The rules every platform shares, in pure Dart: `flutter test test/core` passes, 
 
 The rest of the old Phase 1 moved (D11): the ring sequence to Stage 2, escalation and adaptive weights to "Questions to test later".
 
-## Stage 2 · How do rotating sounds feel? — current
-**Question:** when a different sound starts every 30 s, do people like it enough to try it as their morning alarm, and which sounds work?
+## Stage 2 · Do wake-up tasks get people out of bed? — current
+**Question:** when Stop opens a short task built on the sounds or on movement, can half-awake people do it quickly, and would they want it on their real alarm?
 
 **Build:**
 - [ ] 2.1 Ring sequence: `buildRingSequence(alarm, pool, seed)` in `lib/core/` gives the clips of one ring in order: sounds of the alarm's genres from a shuffle bag seeded with `seed`, cut by the clip rule, until they cover the ring cap (10 min by default). The same seed gives the same sequence; empty clips are skipped; an empty pool gives an empty sequence.
-- [ ] 2.2 Placeholder sounds: a script in `tool/` makes 9 original clips (3 genres × intensity 1–3, synthesized melodies, max 29 s) and `assets/library/manifest.json` with license `original`; a loader in `lib/data/` turns the manifest into sounds. No downloads.
-- [ ] 2.3 Try a ring: a "Try a ring" button on the Alarms tab opens the ringing screen (big clock, current sound title, Stop and Snooze) and plays the sequence from 2.1 at once, through a `SoundPlayer` interface in `lib/platform/`. Stop or Snooze ends the try and shows how many sounds played.
+- [ ] 2.2 Placeholder sounds: a script in `tool/` makes 9 original clips that are easy to tell apart (for example birds, bells, drums; 3 per intensity level 1–3; synthesized, max 29 s) and `assets/library/manifest.json` with license `original`; a loader in `lib/data/` turns the manifest into sounds. No downloads.
+- [ ] 2.3 Wake-up tasks in `lib/core/`, tests first: "Which sound is playing?" (pick it among 3, three times in a row), "Catch the change" (the sounds switch at random moments; tap within 1.5 s of a switch, three times) and "Move" (30 s of movement, counted from the motion sensor). Each task has a time limit and an easier fallback.
+- [ ] 2.4 Try a ring with a task: a "Try a ring" button on the Alarms tab rings now or at a random moment in the next 5 minutes. The ringing screen shows a big clock, the sound title, Stop and Snooze; Stop starts a random task ("Move" only where the device has a motion sensor) while the sounds keep rotating; holding Stop for 5 s is the emergency stop; the 10-min cap ends the ring. Sound and motion go through `SoundPlayer` and `MotionSensor` interfaces in `lib/platform/`.
+- [ ] 2.5 Results and tester kit: after each try, the time from ring to stop, the task, mistakes and sounds played, with a "Copy my results" button (numbers only, nothing is sent); tester instructions and questions in `docs/testing/stage-2.md`.
 
-**Ready when:** on the live site, "Try a ring" plays the 9 clips one after another, each for at most 29 s and never the same one twice in a row, until Stop, Snooze or the cap; it works in Chrome, Edge and a phone browser.
+**Ready when:** on the live site, "Try a ring" rings at the chosen moment with rotating sounds (each at most 29 s, never the same one twice in a row); Stop opens a task, and the ring goes on until the task is done, the emergency stop or the cap; every task can be finished in Chrome, Edge and a phone browser, and "Move" works on a phone.
 
-**Test with people:** 5 friends · one try each, awake, about 3 minutes · the live site on their own phone or laptop.
-**Ask:** Which sounds would you like to wake up to, and which not? Is 30 s per sound too long, too short or right? Would you try it as your morning alarm?
-**Pass if:** at least 3 of 5 would try it as their morning alarm, and we know which sounds to keep.
-**If not:** change the sounds, or the rhythm as a new decision, and test again before Stage 3.
+**Test with people:** 5 friends · daytime · lying down with eyes closed until a ring comes at a random moment · each task once.
+**Ask:** Which task got you up fastest? Which one was annoying or too hard half-awake? How did the sounds feel? Would you put a task on your real alarm?
+**Pass if:** most testers finish each task within a minute, and at least 3 of 5 would put a task on their real alarm.
+**If not:** change or drop the task that failed and test again. Math and other classic tasks wait until testers ask for them.
 
-## Stage 3 · Do people get up with it? — next, rough
-**Question:** with the alarm set for real mornings, do testers get up, and do they want to keep using it?
+## Stage 3 · Do friends like stopping an alarm together? — next, rough
+**Question:** when the alarm stops only after everyone has entered each other's codes, is it fun, and does it get the whole squad up?
 
 **Build (rough):**
-- Storage: drift (works on web) for alarms and ring sessions.
-- Alarms screen: list, add/edit (time, repeat days, label), on/off switch, "rings in 7 h 20 min".
-- Web alarm: "Arm alarms" button (unlocks audio), clock check every second, banner "Keep this tab open", screen wake lock if the browser supports it.
-- Ring log and Insights: every RingEvent is logged; the Insights tab lists the last 14 mornings (time to Stop, snoozes, sounds played) with a "Copy my results" button (numbers only, nothing is sent).
-- Tester instructions and questions in `docs/testing/`.
+- Squad codes in `lib/core/`: a random squad secret; each member's 3-digit code for every 30-s window, computed on the device like two-factor codes; a check that also accepts the previous window, for clocks that differ a little.
+- Make or join a squad: a name, 2–6 members, an alarm time; the others join with a link or QR code that carries the secret, and nothing goes to a server.
+- Try a ring together: each phone shows its own code and fields for the others' codes, and stops when all are in. After 3 minutes, "Stop alone" opens a harder solo task. The emergency stop and the cap still work. No Snooze in a squad.
+- Squad recap: who was up first, how long the whole squad took, who stopped alone.
 
-**Ready when:** in Chrome, an alarm set 1 minute ahead rings after "Arm alarms" with rotating sounds of max 30 s each (on time when the tab is visible, at most about 1 minute late in a background tab); Stop and Snooze are logged; the live site behaves the same; the web part of the alarm test checklist passes.
-
-**Test with people:** the Stage 2 testers · 3 mornings · a laptop, or a plugged-in phone with the tab open · their usual alarm stays on as a backup, 15 minutes later.
-**Pass if:** no missed alarm with the tab open, and at least 3 of 5 want to keep using it.
+**Test with people:** 3–4 groups of 2–4 friends · daytime · once in one room, once apart over a phone call.
+**Pass if:** most groups are all stopped within 3 minutes, and at least half of the people want it for real mornings.
 
 ## Questions to test later
 Each one becomes a stage only when the findings so far say it is worth it; the order is a first guess. The notes keep what we already know about building it.
-- **Does a gentle start feel better?** Escalation: the first sound is intensity 1 (gentle, melodic), each next one is one level stronger until level 3; a volume per level (start values 40% → 70% → 100%) where the platform allows it; a "Gentle start" switch, on by default; a check-in after Stop: "How hard was it to get up? (1–5)". Test: mornings with and without it, in random order.
-- **Will people trust it as their only alarm on an Android phone?** First a spike: the `alarm` package vs a small Kotlin plugin (`setAlarmClock` + foreground service + full-screen intent), recorded in `docs/DECISIONS.md`. Then single-fire alarms, rescheduled after each ring, after a reboot and after a time or time-zone change; ringing over the lock screen, with a foreground service that plays the rotation; permission onboarding (notifications, exact alarms, full-screen notifications, battery-optimization tips). Test: the alarm test checklist on a real phone, then a week as the testers' main alarm, with a backup.
-- **Do voices of loved ones wake people better than music?** Record up to 30 s, or import a voice message sent by chat (share sheet or file picker) and trim it to 30 s; give it a name ("Mom", "Best friend") and use it in the rotation. Test: voice mornings vs music mornings.
-- **Does rotation beat the same sound every morning?** Experiment mode: 4 weeks, 2 weeks "same sound" and 2 weeks "rotation" in random order; a check-in after Stop; tracks time to Stop, snoozes and missed alarms; exports a CSV with one row per morning, only when the user taps Export; a consent screen, no names. Needs a phone alarm people trust.
-- **Does the app learn which sounds work for you?** Adaptive weights: each sound starts at 1.0; the sound playing at Snooze × 0.8, at Stop × 1.1; weights stay between 0.2 and 3.0 (start values; tune with real data); weighted pick inside the shuffle bag; on by default, with "Why this sound?" and "Reset learning".
+- **Do people get up with it on real mornings?** Storage (drift, works on web) for alarms and ring sessions; Alarms screen: list, add/edit (time, repeat days, label, task or squad), on/off switch, "rings in 7 h 20 min"; web alarm: "Arm alarms" button (unlocks audio), clock check every second, banner "Keep this tab open", screen wake lock if the browser supports it; every RingEvent logged; the Insights tab lists the last 14 mornings (time to stop, snoozes, sounds played) with "Copy my results". Ready when an alarm set 1 minute ahead rings after "Arm alarms" (on time when the tab is visible, at most about 1 minute late in a background tab) and the web part of the alarm test checklist passes. Test: 3 mornings, alone and in squads, with the usual alarm as a backup 15 minutes later.
+- **Will people trust it as their only alarm on an Android phone?** First a spike: the `alarm` package vs a small Kotlin plugin (`setAlarmClock` + foreground service + full-screen intent), recorded in `docs/DECISIONS.md`. Then single-fire alarms, rescheduled after each ring, after a reboot and after a time or time-zone change; ringing over the lock screen, with a foreground service that plays the rotation, and tasks and squad codes shown there too; permission onboarding (notifications, exact alarms, full-screen notifications, battery-optimization tips). Test: the alarm test checklist on a real phone, then a week as the testers' main alarm, with a backup.
+- **Does a gentle start feel better?** Escalation: the first sound is intensity 1 (gentle, melodic), each next one is one level stronger until level 3; a volume per level (start values 40% → 70% → 100%) where the platform allows it; a "Gentle start" switch, on by default; a check-in after the stop: "How hard was it to get up? (1–5)". Test: mornings with and without it, in random order.
+- **Do voices of loved ones wake people better than music?** Record up to 30 s, or import a voice message sent by chat (share sheet or file picker) and trim it to 30 s; give it a name ("Mom", "Best friend") and use it in the rotation. A squad mate can send you one this way. Test: voice mornings vs music mornings.
+- **Does rotation beat the same sound every morning?** Experiment mode: 4 weeks, 2 weeks "same sound" and 2 weeks "rotation" in random order; a check-in after the stop; tracks time to stop, snoozes and missed alarms; exports a CSV with one row per morning, only when the user taps Export; a consent screen, no names. Needs a phone alarm people trust.
+- **Does the app learn which sounds work for you?** Adaptive weights: each sound starts at 1.0; the sound playing at Snooze × 0.8, at the stop × 1.1; weights stay between 0.2 and 3.0 (start values; tune with real data); weighted pick inside the shuffle bag; on by default, with "Why this sound?" and "Reset learning".
+- **Do streaks and new sounds keep people on time?** A streak for each alarm and squad; every week of on-time mornings unlocks new sounds, so the rotation stays unfamiliar.
+- **Do people want more kinds of tasks?** Math, memory or typing as options, only if testers ask for them.
 - **Do people want real music: genres and their own songs?** Genres v1: Pop, Rock, Hip-Hop, Electronic, Lo-fi, Classical, Jazz, Acoustic, plus Nature sounds, at least 8 clips each. `docs/MUSIC_SOURCING.md`: allowed licenses, sources (Freesound with the CC0 filter; Free Music Archive and Incompetech after checking each track's license; Pixabay Music only after reading its Content License) and proof (license URL + date saved); you choose and download tracks, Claude Code processes them. `tool/prepare_audio.sh` (ffmpeg): cut to max 29 s, 0.5 s fade in/out, the same loudness for all clips (e.g. −14 LUFS), `.mp3` (Android, desktop, web) and `.caf` (iOS, in a format iOS alarm sounds accept). Manifest fields: id, title, artist, genre, intensity (1–3), file, durationSec, license, sourceUrl, attribution. `tool/check_licenses.dart` runs in CI and fails if any audio file has no manifest entry, a disallowed license, or is longer than 29 s. Credits screen with all attributions (required for CC BY); Library screen: browse by genre, preview, choose genres per alarm. Own songs (mp3, m4a, wav): pick a 30-s part with a start slider and preview; stored only on the device.
-- **Can an iPhone ring a rotation with the app closed?** iOS 26+, AlarmKit. First a spike on a real iPhone: (a) a bundled `.caf` plays as the alarm sound; (b) a chain of alarms 30 s apart with different sounds, where Stop cancels the rest; (c) can a user song or voice recording be the alarm sound?; (d) how many alarms can be scheduled at once? Then `IosAlarmScheduler` with the chosen plugin (`flutter_alarmkit` ships a setup skill for Claude Code), `NSAlarmKitUsageDescription` in Info.plist, a permission screen, and rotation through the alarm chain (escalation = clips ordered from gentle to strong). If (c) fails, user songs and voice messages play inside the app after the user opens the alarm, and the UI explains this. Test: the alarm test checklist with the phone on silent.
-- **Do people want it on their computer?** macOS, Windows and Linux: tray icon and "Launch at login"; closing the window keeps the app running in the tray; a scheduler that checks the clock every second and brings the ringing window to the front; the note "Your computer must be awake for alarms to ring." macOS is built on a Mac, Windows and Linux in GitHub Actions. Test: the alarm rings with the main window closed on all three systems.
+- **Can an iPhone ring a rotation with the app closed?** iOS 26+, AlarmKit. First a spike on a real iPhone: (a) a bundled `.caf` plays as the alarm sound; (b) a chain of alarms 30 s apart with different sounds, where Stop cancels the rest; (c) can a user song or voice recording be the alarm sound?; (d) how many alarms can be scheduled at once?; (e) AlarmKit always shows a system Stop button, so can the chain keep ringing until the task or the squad codes are done in the app? Then `IosAlarmScheduler` with the chosen plugin (`flutter_alarmkit` ships a setup skill for Claude Code), `NSAlarmKitUsageDescription` in Info.plist, a permission screen, and rotation through the alarm chain (escalation = clips ordered from gentle to strong). If (c) fails, user songs and voice messages play inside the app after the user opens the alarm, and the UI explains this. Test: the alarm test checklist with the phone on silent.
+- **Do people want it on their computer?** macOS, Windows and Linux: tray icon and "Launch at login"; closing the window keeps the app running in the tray; a scheduler that checks the clock every second and brings the ringing window to the front; the note "Your computer must be awake for alarms to ring." Computers have no motion sensor, so they get the sound tasks. macOS is built on a Mac, Windows and Linux in GitHub Actions. Test: the alarm rings with the main window closed on all three systems.
 - **Will strangers install it and keep it?** A public beta: app icon, splash screen, store screenshots (English); a privacy policy (local-first, no data collected) on the web site; Play Console declarations (exact alarms, full-screen intent) and the internal testing track; TestFlight (needs a paid Apple Developer account); a signed and notarized macOS build, a Windows installer (MSIX), a Linux AppImage or Flatpak; a final check with `/code-review`, the license check and the alarm test checklist on every platform.
 
-Not planned yet: accounts and cloud sync; sending a voice message straight to a friend's alarm (needs a server and moderation); a bedtime reminder (putting off bedtime is linked with worse sleep); more genres; smart wake-up in light sleep (needs sleep tracking; check the evidence first).
+Not planned yet: accounts and cloud sync; seeing live which squad mates are up (needs a server); sending a voice message straight to a friend's alarm (needs a server and moderation); a bedtime reminder (putting off bedtime is linked with worse sleep); more genres; smart wake-up in light sleep (needs sleep tracking; check the evidence first).
 
 ## Alarm test checklist
 Any change to scheduling or ringing must pass this on every affected platform (CLAUDE.md).
+- **Every platform:** each way to end a ring works: the task, the squad codes, "Stop alone", the emergency stop (hold Stop for 5 s) and the 10-min cap.
 - **Web:** tab visible · tab in the background (at most about 1 minute late) · after a reload, the app asks to arm alarms again.
 - **Phone:** app open · in the background · swiped away · phone locked · after a reboot · Do Not Disturb on · phone idle overnight.
 - **Desktop:** main window closed, app in the tray · computer awake.
@@ -130,12 +137,14 @@ Any change to scheduling or ringing must pass this on every affected platform (C
 - 2026-10-29 · 1.2 · Clip rule: `SoundClip.of(sound)` in `lib/core/sound_clip.dart` plays from the clip start to the end of the file, at most 30 s, or 29 s for bundled sounds; a bundled file over 29 s is cut, not rejected (D9). 12 tests, including "no clip over 30 s" on 10 000 random sounds; 39 tests in `test/core/`.
 - 2026-10-29 · 1.3 · Shuffle bag: `ShuffleBag` in `lib/core/shuffle_bag.dart` plays every sound once per round in random order and never the same sound twice in a row, also when it refills (D10). Randomness comes only from the caller's `Random`, and sounds are deduplicated and sorted by id, so the same seed gives the same sequence. Empty pool → no sound; one sound → plays every turn; two → take turns. 10 tests, checked against planted bugs; 49 tests in `test/core/`.
 - 2026-10-29 · plan · Phases by platform became stages by question, each ending with a test on real people (D11). Phase 0 → Stage 0 and tasks 1.1–1.3 → Stage 1, with the same numbers; the ring sequence moved to Stage 2, the rest of the old plan to "Questions to test later". `docs/DECISIONS.md` is grouped by topic and collects findings from the tests (F-numbers).
+- 2026-10-29 · plan · Wake-up tasks and squads (D12): Stop opens a short task built on the sounds or on movement, and a squad's alarm stops only when everyone has entered each other's codes, with no accounts and no server. Stage 2 now tests the tasks alone, Stage 3 squads; real mornings in the browser moved to "Questions to test later".
 
 ## References
 - Unfamiliar voices in sleep: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8896625/
 - Melodic alarms (PLOS ONE): https://doi.org/10.1371/journal.pone.0215788
 - Rising alarm (KTH): https://dael.euracoustics.org/confs/fa2026/data/articles/000156.pdf
 - Mother's-voice smoke alarm: https://www.nationwidechildrens.org/newsroom/news-releases/2018/10/smoke-alarm-study
+- Exercise on waking and sleep inertia (lab study): https://pubmed.ncbi.nlm.nih.gov/34606883/
 - Snooze study (Scientific Reports): https://news.massgeneralbrigham.org/en/dont-hit-snooze-on-new-research-about-waking-up-each-morning
 - Snoozing lab study: https://www.nbcnews.com/health/health-news/ok-hit-snooze-button-according-science-rcna120830
 - Bedtime procrastination: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11059092/
