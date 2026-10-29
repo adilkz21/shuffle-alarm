@@ -57,7 +57,7 @@ Done when: CI is green and the app shell opens at the live URL.
 Goal: all the "smart" logic exists and is tested before any platform work.
 - [x] 1.1 Models: `Alarm` (id, time, repeat days, label, enabled, genres, gentleStart, experimentGroup), `Sound` (id, title, source: builtin/user/voice, genre, intensity 1–3, duration, clipStart), `RingSession`, `RingEvent` (soundId, startedAt, endedAt, action: stop/snooze/timeout).
 - [x] 1.2 Clip rule: a clip window never exceeds 30 s; bundled clips never exceed 29 s.
-- [ ] 1.3 Shuffle bag: no sound repeats until every sound in the pool has played, and never the same sound twice in a row (also across bag refills).
+- [x] 1.3 Shuffle bag: no sound repeats until every sound in the pool has played, and never the same sound twice in a row (also across bag refills).
 - [ ] 1.4 Escalation: the first sound is intensity 1 (gentle, melodic); each next sound is one level stronger until level 3. A volume value per level (start values 40% → 70% → 100%) for platforms that allow it.
 - [ ] 1.5 Adaptive weights: each sound starts at 1.0; the sound playing when the user taps Snooze is multiplied by 0.8; the sound playing when the user taps Stop by 1.1; keep weights between 0.2 and 3.0; weighted pick inside the shuffle bag. (Start values; tune with real data.)
 - [ ] 1.6 `buildRingSequence(alarm, pool, weights, seed)`: ordered clips that cover the 10-min cap; same seed gives the same sequence.
@@ -151,6 +151,7 @@ Done when: testers can install the app on every platform.
 - 2026-10-29 · 0.4 · Public repo `adilkz21/shuffle-alarm`; `.github/workflows/ci.yml` runs a format check, analyze and test on every push (Flutter 3.47.8, lockfile enforced) and deploys `main` to GitHub Pages (D7). First run green; app shell checked at https://adilkz21.github.io/shuffle-alarm/. Phase 0 done.
 - 2026-10-29 · 1.1 · Core models in `lib/core/`: `Alarm` (+ `AlarmTime`, `Weekday`, `ExperimentGroup`), `Sound` (+ `SoundSource`, `Intensity` levels 1–3), `RingEvent` (+ `RingAction`), and `RingSession` = one ring, whose outcome (stopped/snoozed/missed) comes from its last event (D8). Immutable value classes; `meta` and `collection` are now direct dependencies. 27 tests in `test/core/`.
 - 2026-10-29 · 1.2 · Clip rule: `SoundClip.of(sound)` in `lib/core/sound_clip.dart` plays from the clip start to the end of the file, at most 30 s, or 29 s for bundled sounds; a bundled file over 29 s is cut, not rejected (D9). 12 tests, including "no clip over 30 s" on 10 000 random sounds; 39 tests in `test/core/`.
+- 2026-10-29 · 1.3 · Shuffle bag: `ShuffleBag` in `lib/core/shuffle_bag.dart` plays every sound once per round in random order and never the same sound twice in a row, also when it refills (D10). Randomness comes only from the caller's `Random`, and sounds are deduplicated and sorted by id, so the same seed gives the same sequence. Empty pool → no sound; one sound → plays every turn; two → take turns. 10 tests, checked against planted bugs; 49 tests in `test/core/`.
 
 ## References
 - Unfamiliar voices in sleep: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8896625/
