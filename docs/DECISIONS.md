@@ -50,6 +50,11 @@ If a later entry replaces an earlier one, mark the old one "Replaced by Dn" inst
 - **Why:** value classes keep state and tests simple. Wrong values (hour 24, a clip start past the end) trip an `assert` in tests and debug builds but can't crash a ringing alarm in a release build; data from files and the database is checked where it is loaded. Computing the outcome from the events means the two can never disagree.
 - **Affects:** tasks 1.2–1.6 and the database (2.1). Where a sound's file is stored is not part of `Sound` yet; it comes with storage (2.1, 2.6). `lib/core` may use the pure-Dart packages `meta` and `collection`: both are from the Dart team (BSD license) and already came with Flutter, so no package versions changed.
 
+### D9 · 2026-10-29 · The clip rule (task 1.2)
+- **Decision:** `SoundClip.of(sound)` in `lib/core/sound_clip.dart` is the part of a sound that plays in one turn: from its `clipStart` to the end of the file, but at most 30 s (`SoundClip.maxLength`), or 29 s for sounds bundled with the app (`SoundClip.maxBundledLength`). It is the only way to make a `SoundClip`, so no clip can break the limits. A clip that starts close to the end of a song is just shorter; its start is not moved back. A bundled file over 29 s is cut, not rejected. The name is not `Clip`, because Flutter has a `Clip` enum that screens would then have to hide.
+- **Why:** one sound plays at most 30 s (CLAUDE.md). iOS AlarmKit only accepts alarm sounds shorter than 30 s, and bundled sounds are the ones it can play (5.1 checks user sounds), so they keep a 1-s margin. Cutting instead of rejecting means a packaging mistake can't silence an alarm; `tool/check_licenses.dart` (3.5) is where such files fail. If bad values get past `Sound`'s asserts in a release build, a start outside the file plays from the beginning and a sound without length gives an empty clip. Tests can't build such sounds, because the asserts stop them.
+- **Affects:** the ring sequence (1.6) is built from clips and must skip empty ones. The song importer (2.6), voice recorder (2.7) and license check (3.5) should take their limits from these constants. AlarmKit plays the whole bundled file, not a clip of it, so `tool/prepare_audio.sh` (3.3) must still cut the files themselves to 29 s.
+
 ## Limits
 
 ### L1 · 2026-10-28 · Building on Windows
