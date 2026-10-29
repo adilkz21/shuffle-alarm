@@ -4,7 +4,7 @@ Decisions made while building Shuffle Alarm, platform limits we ran into, and wh
 Product rules live in [CLAUDE.md](../CLAUDE.md); the stages and their questions live in [PLAN.md](../PLAN.md).
 
 How to add an entry:
-- A finding from a test with people gets the next F-number and goes at the top of "Findings", newest first. A decision gets the next D-number and goes under its topic; a platform limit gets the next L-number. Next free numbers: F1, D13, L3.
+- A finding from a test with people gets the next F-number and goes at the top of "Findings", newest first. A decision gets the next D-number and goes under its topic; a platform limit gets the next L-number. Next free numbers: F1, D14, L3.
 - Say what was decided or seen, why, and what it affects, in a few lines. A decision that follows from a test names its finding ("Why: F2").
 - Numbers never change, so links such as "DECISIONS.md (D6)" in code stay valid. If a later entry replaces an earlier one, mark the old one "Replaced by Dn" instead of deleting it.
 - Name features, not the numbers of tasks or stages that are not done yet: later stages are planned after each test, so their numbers change.
@@ -14,7 +14,7 @@ How to add an entry:
 | [Findings from tests with people](#findings-from-tests-with-people) | none yet |
 | [Product](#product) | D12 |
 | [Process and planning](#process-and-planning) | D11 |
-| [Core engine](#core-engine) | D8, D9, D10 |
+| [Core engine](#core-engine) | D8, D9, D10, D13 |
 | [Code and architecture](#code-and-architecture) | D2, D3, D4, D5 |
 | [Look](#look) | D6 |
 | [Project, CI and release](#project-ci-and-release) | D1, D7 |
@@ -65,6 +65,12 @@ None yet: the first findings come from the Stage 2 test. Write each one like thi
 - **Edge cases:** an empty pool gives no sound (`next()` returns null), and the caller decides what plays instead. A pool of one sound plays it every turn: twice in a row can't be avoided there, and the alarm must keep ringing. A pool of two takes turns (A B A B…). Sounds with the same id count as one sound, and the first one is kept, because the id names a sound in ring events, weights and the manifest.
 - **Why:** rotation only helps if every sound gets its turn before any comes back. "No repeat" counts per round: a stricter rule (a sound comes back only after every other sound has played since its last turn) would force every round into the same order, so at the seam between two rounds a sound can come back after just one other sound.
 - **Affects:** the ring sequence and, later, escalation and adaptive weights. `buildRingSequence` makes the bag with `Random(seed)` and must cope with `next()` returning null. Dart's `Random` may change its numbers between SDK releases, so a sequence that must be replayed after an app update should be stored as sound ids, not as a seed.
+
+### D13 · 2026-10-29 · The ring sequence (task 2.1)
+- **Decision:** `buildRingSequence(alarm, pool, seed)` in `lib/core/ring_sequence.dart` gives the clips one ring plays, in order, as a list that can't be changed: sounds of the alarm's genres from a `ShuffleBag` seeded with `seed`, each cut by the clip rule, until together they last at least the ring cap. The cap is the optional `cap` argument, 10 min by default (`defaultRingCap`), so the ring cap setting can pass its own value. The last clip plays whole, so the clips last up to one clip longer than the cap, and the ringing code ends the ring at the cap by the clock. It has to anyway: Stop, Snooze, wake-up tasks and throttled background tabs all change when the sounds really play.
+- **Edge cases:** a clip shorter than 1 s (`SoundClip.minLength`) is too short to recognize. Such sounds never enter the bag, and neither do empty clips from bad data in a release build. So every turn adds at least a second (at most 600 clips in 10 min), a pool of only such sounds gives an empty list at once instead of looping forever, and skipping can't make a sound play twice in a row. An empty pool, or one with no sound of the alarm's genres, gives an empty list too; the ringing code then plays a fallback sound, because an alarm must never ring silently. A pool with one sound the alarm can play plays it every turn (D10). A cap of zero or less trips an `assert`; in a release build it gives an empty list.
+- **Why:** each clip stays exactly what the clip rule makes it (D9), so there is still only one way to make a clip, and AlarmKit plays whole files, so a cut last clip couldn't be kept on an iPhone anyway. Filtering before the bag, not while drawing from it, keeps the bag's guarantees (D10) for the whole ring. Tests can't build an empty clip (D9), so they use clips under a second, which take the same path, and they build those rings in a separate isolate with a time limit, so a loop that never ends fails the tests instead of hanging the run.
+- **Affects:** the ringing screen plays the clips in order and stops at the cap; on an iPhone, the chain of alarms can take its sounds and start times from the list. Clips count toward the cap with their full length, so a feature that switches sounds before a clip ends (a wake-up task) uses them up faster; it can get a new optional argument, such as a shorter turn, instead of a new function. Escalation can read `alarm.gentleStart`, and adaptive weights can come as one more optional argument, so neither changes the call. The song importer and voice recorder should keep clips at least `SoundClip.minLength` long, and the ring cap setting should keep its value in a sensible range, because the list grows with the cap.
 
 ## Code and architecture
 

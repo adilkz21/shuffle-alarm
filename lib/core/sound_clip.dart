@@ -33,6 +33,10 @@ final class SoundClip {
   /// accepts alarm sounds shorter than 30 s.
   static const maxBundledLength = Duration(seconds: 29);
 
+  /// The shortest clip a ring plays: a shorter one is too short to
+  /// recognize, so the ring sequence skips it.
+  static const minLength = Duration(seconds: 1);
+
   /// The limit for sounds from [source].
   static Duration maxLengthFor(SoundSource source) => switch (source) {
     .builtin => maxBundledLength,
