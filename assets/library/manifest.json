@@ -1,0 +1,112 @@
+{
+  "sounds": [
+    {
+      "id": "placeholder-birds",
+      "title": "Birds",
+      "artist": "Shuffle Alarm",
+      "genre": "placeholder",
+      "intensity": 1,
+      "file": "placeholder/birds.wav",
+      "durationSec": 22,
+      "license": "original",
+      "sourceUrl": "",
+      "attribution": ""
+    },
+    {
+      "id": "placeholder-harp",
+      "title": "Harp",
+      "artist": "Shuffle Alarm",
+      "genre": "placeholder",
+      "intensity": 1,
+      "file": "placeholder/harp.wav",
+      "durationSec": 24,
+      "license": "original",
+      "sourceUrl": "",
+      "attribution": ""
+    },
+    {
+      "id": "placeholder-music-box",
+      "title": "Music Box",
+      "artist": "Shuffle Alarm",
+      "genre": "placeholder",
+      "intensity": 1,
+      "file": "placeholder/music-box.wav",
+      "durationSec": 24,
+      "license": "original",
+      "sourceUrl": "",
+      "attribution": ""
+    },
+    {
+      "id": "placeholder-xylophone",
+      "title": "Xylophone",
+      "artist": "Shuffle Alarm",
+      "genre": "placeholder",
+      "intensity": 2,
+      "file": "placeholder/xylophone.wav",
+      "durationSec": 24,
+      "license": "original",
+      "sourceUrl": "",
+      "attribution": ""
+    },
+    {
+      "id": "placeholder-video-game",
+      "title": "Video Game",
+      "artist": "Shuffle Alarm",
+      "genre": "placeholder",
+      "intensity": 2,
+      "file": "placeholder/video-game.wav",
+      "durationSec": 23,
+      "license": "original",
+      "sourceUrl": "",
+      "attribution": ""
+    },
+    {
+      "id": "placeholder-bell-tower",
+      "title": "Bell Tower",
+      "artist": "Shuffle Alarm",
+      "genre": "placeholder",
+      "intensity": 2,
+      "file": "placeholder/bell-tower.wav",
+      "durationSec": 24,
+      "license": "original",
+      "sourceUrl": "",
+      "attribution": ""
+    },
+    {
+      "id": "placeholder-drums",
+      "title": "Drums",
+      "artist": "Shuffle Alarm",
+      "genre": "placeholder",
+      "intensity": 3,
+      "file": "placeholder/drums.wav",
+      "durationSec": 24,
+      "license": "original",
+      "sourceUrl": "",
+      "attribution": ""
+    },
+    {
+      "id": "placeholder-alarm-clock",
+      "title": "Alarm Clock",
+      "artist": "Shuffle Alarm",
+      "genre": "placeholder",
+      "intensity": 3,
+      "file": "placeholder/alarm-clock.wav",
+      "durationSec": 24,
+      "license": "original",
+      "sourceUrl": "",
+      "attribution": ""
+    },
+    {
+      "id": "placeholder-fanfare",
+      "title": "Fanfare",
+      "artist": "Shuffle Alarm",
+      "genre": "placeholder",
+      "intensity": 3,
+      "file": "placeholder/fanfare.wav",
+      "durationSec": 24,
+      "license": "original",
+      "sourceUrl": "",
+      "attribution": ""
+    }
+  ]
+}

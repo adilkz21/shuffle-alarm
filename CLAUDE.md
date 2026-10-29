@@ -46,6 +46,7 @@ The plan lives in `PLAN.md`: short stages, each asking one question and ending w
 - `flutter test` (one file: `flutter test test/core/shuffle_bag_test.dart`)
 - `flutter build web --release --base-href /<repo-name>/`
 - `dart run tool/check_licenses.dart` (audio license check, comes with the music library)
+- `dart run tool/make_placeholder_sounds.dart` (remakes the 9 placeholder clips and their manifest entries; the same script always makes the same files)
 
 ## Workflow
 - Work on the current stage of `PLAN.md`, task by task. One task per session; `/clear` between tasks. A new stage starts only after the test of the current one, once its findings are in `docs/DECISIONS.md`.
