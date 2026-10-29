@@ -3,7 +3,7 @@ import 'package:shuffle_alarm/features/settings/settings_button.dart';
 import 'package:shuffle_alarm/ui/dawn_page.dart';
 import 'package:shuffle_alarm/ui/empty_state.dart';
 
-/// The Insights tab. A placeholder until the morning stats (PLAN.md task 2.8).
+/// The Insights tab. A placeholder until the morning stats (PLAN.md, Stage 3).
 class InsightsScreen extends StatelessWidget {
   const new({super.key});
 

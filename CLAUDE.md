@@ -2,7 +2,7 @@
 
 Cross-platform alarm clock that wakes people with a rotating set of different sounds.
 Working title "Shuffle Alarm", package `shuffle_alarm` (rename later if needed).
-The roadmap and task checklist live in `PLAN.md`. Run `/next-task` to work on the next task.
+The plan lives in `PLAN.md`: short stages, each asking one question and ending with a test on real people. Run `/next-task` to work on the next task of the current stage.
 
 ## Product rules (never break)
 - UI text is English only. Do not add localization.
@@ -12,7 +12,7 @@ The roadmap and task checklist live in `PLAN.md`. Run `/next-task` to work on th
 - No copyrighted music. Every bundled audio file needs an entry in `assets/library/manifest.json` (title, artist, license, sourceUrl, attribution).
 - Allowed licenses for bundled audio: `original` (made by us), CC0, CC BY 4.0 (credit in the Credits screen), or a license that explicitly allows redistribution inside apps. Never CC BY-NC, CC BY-ND, or "free for videos only" licenses.
 - User songs and voice recordings stay on the device. Never upload them anywhere.
-- Alarm reliability beats features: any change to scheduling or ringing must pass the alarm test checklist (`PLAN.md` task 4.5) on every affected platform.
+- Alarm reliability beats features: any change to scheduling or ringing must pass the alarm test checklist (its own section in `PLAN.md`) on every affected platform.
 - Ask for permissions with a short explanation screen first. No dark patterns.
 
 ## Tech stack
@@ -21,8 +21,8 @@ The roadmap and task checklist live in `PLAN.md`. Run `/next-task` to work on th
 - Storage: drift (SQLite, also on web). Simple settings: shared_preferences.
 - Audio: audioplayers (supports all 6 platforms). Recording: record. File import: file_picker.
 - Alarm scheduling, always behind the `AlarmScheduler` interface:
-  - Android: AlarmManager `setAlarmClock` + foreground service + full-screen intent (`alarm` package or own Kotlin plugin, decided in Phase 4).
-  - iOS 26+: AlarmKit via `flutter_alarmkit` or `alarm_kit` (decided in Phase 5).
+  - Android: AlarmManager `setAlarmClock` + foreground service + full-screen intent (`alarm` package or own Kotlin plugin, decided by a spike before the Android work).
+  - iOS 26+: AlarmKit via `flutter_alarmkit` or `alarm_kit` (decided by a spike on a real iPhone).
   - Desktop: in-app scheduler + tray icon; the app keeps running in the background.
   - Web: in-tab scheduler, test version only.
 - Before adding any package: check pub.dev for platform support, recent releases and license. If it does not cover all 6 platforms, hide it behind an interface with a fallback.
@@ -43,16 +43,16 @@ The roadmap and task checklist live in `PLAN.md`. Run `/next-task` to work on th
 - `flutter analyze` (must report 0 issues)
 - `flutter test` (one file: `flutter test test/core/rotation_engine_test.dart`)
 - `flutter build web --release --base-href /<repo-name>/`
-- `dart run tool/check_licenses.dart` (audio license check, from Phase 3)
+- `dart run tool/check_licenses.dart` (audio license check, comes with the music library)
 
 ## Workflow
-- Follow `PLAN.md` in order. One task per session; `/clear` between tasks.
+- Work on the current stage of `PLAN.md`, task by task. One task per session; `/clear` between tasks. A new stage starts only after the test of the current one, once its findings are in `docs/DECISIONS.md`.
 - If a task touches 2+ files, propose a short plan first and wait for approval.
 - Write tests first for everything in `lib/core/`.
-- A task is done only when `flutter analyze` is clean, `flutter test` passes, the task's "Done when" check is met with evidence shown, and its checkbox in `PLAN.md` is ticked.
+- A task is done only when `flutter analyze` is clean, `flutter test` passes, what the task describes works with evidence shown, and its checkbox in `PLAN.md` is ticked.
 - Commit after each task: `type(scope): summary`, e.g. `feat(rotation): add shuffle bag`. Then push to `main` (agreed with the user) and check that the CI run is green. CI (`.github/workflows/ci.yml`) checks every push; a green push to `main` publishes the web test version at https://adilkz21.github.io/shuffle-alarm/.
 - Never commit secrets, signing keys or user audio.
-- If a requirement is unclear or a platform limit blocks it, stop and ask. Record decisions and limits in `docs/DECISIONS.md`.
+- If a requirement is unclear or a platform limit blocks it, stop and ask. Record decisions, limits and findings from tests with people in `docs/DECISIONS.md`.
 
 ## Gotchas
 - Web: browsers block audio until the user interacts with the page, so alarms need an "Arm alarms" tap. Background tabs are throttled (silent audio does not prevent it), so check the clock on every tick instead of relying on one long timer.

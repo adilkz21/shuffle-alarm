@@ -1,18 +1,62 @@
-# Decisions and limits
+# Decisions and findings
 
-Decisions made while building Shuffle Alarm, and platform limits we ran into.
-Product rules live in [CLAUDE.md](../CLAUDE.md); the roadmap and its decision table live in [PLAN.md](../PLAN.md).
+Decisions made while building Shuffle Alarm, platform limits we ran into, and what tests with real people taught us.
+Product rules live in [CLAUDE.md](../CLAUDE.md); the stages and their questions live in [PLAN.md](../PLAN.md).
 
-How to add an entry: append it to the right section with the next number (decisions D1, D2…; limits L1, L2…).
-Say what was decided, why, and what it affects, in a few lines.
-If a later entry replaces an earlier one, mark the old one "Replaced by Dn" instead of deleting it.
+How to add an entry:
+- A finding from a test with people gets the next F-number and goes at the top of "Findings", newest first. A decision gets the next D-number and goes under its topic; a platform limit gets the next L-number. Next free numbers: F1, D12, L3.
+- Say what was decided or seen, why, and what it affects, in a few lines. A decision that follows from a test names its finding ("Why: F2").
+- Numbers never change, so links such as "DECISIONS.md (D6)" in code stay valid. If a later entry replaces an earlier one, mark the old one "Replaced by Dn" instead of deleting it.
+- Name features and stages, not the numbers of tasks that are not done yet: later stages are planned after each test, so their task numbers change.
 
-## Decisions
+| Topic | Entries |
+| --- | --- |
+| [Findings from tests with people](#findings-from-tests-with-people) | none yet |
+| [Process and planning](#process-and-planning) | D11 |
+| [Core engine](#core-engine) | D8, D9, D10 |
+| [Code and architecture](#code-and-architecture) | D2, D3, D4, D5 |
+| [Look](#look) | D6 |
+| [Project, CI and release](#project-ci-and-release) | D1, D7 |
+| [Limits](#limits) | L1, L2 |
 
-### D1 · 2026-10-28 · Project identity and theme (task 0.1)
-- **Decision:** org ID `com.adilz`, so the app IDs are `com.adilz.shuffle_alarm` (Android, Linux) and `com.adilz.shuffleAlarm` (iOS, macOS). The display name is "Shuffle Alarm" on every platform. The Material 3 theme comes from one seed color, sunrise orange `#F2994A`, with light and dark versions that follow the system setting.
-- **Why:** app IDs are hard to change after a store release. One seed color keeps every screen consistent.
-- **Affects:** store setup and signing (Phase 8). The macOS `PRODUCT_NAME` is "Shuffle Alarm" (it is also the window title); this has not been built on a Mac yet.
+## Findings from tests with people
+
+None yet: the first findings come from the Stage 2 test. Write each one like this:
+
+```markdown
+### F1 · YYYY-MM-DD · Stage 2 · Short title
+- **Tested:** who (no names), how many, how long, on what.
+- **Saw:** the numbers, and what people did and said.
+- **So:** keep, change or drop; the decisions it led to (Dn) and what it means for the next stage.
+```
+
+## Process and planning
+
+### D11 · 2026-10-29 · Stages by question, with a test on real people after each
+- **Decision:** `PLAN.md` is a list of short stages instead of fixed phases by platform. Each stage asks one question about how people wake up, builds only what it takes to answer it (1–2 weeks), and ends with a test on real people with a "pass if" check. The results become findings (F-numbers) in this file, and they decide the next stage. The current stage is planned in detail and the next one roughly; the rest of the old plan became "Questions to test later", with its notes kept. Phase 0 became Stage 0 and tasks 1.1–1.3 Stage 1, with the same numbers. The ring sequence (old 1.6) is now task 2.1; escalation (old 1.4) and adaptive weights (old 1.5) became questions. The first test with people (Stage 2) is a short, awake try of the rotation; the first test on real mornings comes after it (Stage 3). This file now starts with the findings and groups decisions by topic; no number changed.
+- **Why:** the old plan fixed every feature in advance. Building in the order of open questions lets testers decide which features the app gets, so it grows its own way, and an idea that doesn't work is dropped after a week instead of after a phase.
+- **Affects:** every next step. `/next-task` works on the current stage and doesn't start the next one before its test; CLAUDE.md's workflow says the same. The alarm test checklist is now its own section in `PLAN.md`. Testers are friends who agree to take part; we collect no names, and results leave a device only when a tester copies or exports them. In this file, future work is named by feature or stage, not by task number.
+
+## Core engine
+
+### D8 · 2026-10-29 · Core models (task 1.1)
+- **Decision:** `Alarm`, `Sound`, `RingEvent` and `RingSession` live in `lib/core/` as immutable classes that compare by value; their sets and lists are copied and can't be changed. IDs are strings: a library clip uses its id from `manifest.json`, everything else gets a generated id (AlarmKit uses UUIDs). The time of day is our own `AlarmTime`, because Flutter's `TimeOfDay` can't be used in core. `Intensity` is an enum: gentle, medium, strong = levels 1–3. Empty `repeatDays` means the alarm rings once; empty `genres` means every genre, so an alarm always has sounds to play.
+- **Rings:** a `RingEvent` is one sound that played; `timeout` means nobody tapped anything (the clip played to its end, or the ring cap ran out). A `RingSession` is one ring, from the first sound until Stop, Snooze or the cap. The ring after a Snooze is a new session with the same `dueAt`, so the rings of one morning can be grouped (Insights, experiment mode). The outcome comes from the last event: Stop → stopped, Snooze → snoozed, anything else → missed, which includes an app closed while it rang.
+- **Why:** value classes keep state and tests simple. Wrong values (hour 24, a clip start past the end) trip an `assert` in tests and debug builds but can't crash a ringing alarm in a release build; data from files and the database is checked where it is loaded. Computing the outcome from the events means the two can never disagree.
+- **Affects:** the clip rule (1.2), the shuffle bag (1.3), the ring sequence (Stage 2) and the database (Stage 3). Where a sound's file is stored is not part of `Sound` yet; it comes with the manifest loader (Stage 2), storage (Stage 3) and the song importer. `lib/core` may use the pure-Dart packages `meta` and `collection`: both are from the Dart team (BSD license) and already came with Flutter, so no package versions changed.
+
+### D9 · 2026-10-29 · The clip rule (task 1.2)
+- **Decision:** `SoundClip.of(sound)` in `lib/core/sound_clip.dart` is the part of a sound that plays in one turn: from its `clipStart` to the end of the file, but at most 30 s (`SoundClip.maxLength`), or 29 s for sounds bundled with the app (`SoundClip.maxBundledLength`). It is the only way to make a `SoundClip`, so no clip can break the limits. A clip that starts close to the end of a song is just shorter; its start is not moved back. A bundled file over 29 s is cut, not rejected. The name is not `Clip`, because Flutter has a `Clip` enum that screens would then have to hide.
+- **Why:** one sound plays at most 30 s (CLAUDE.md). iOS AlarmKit only accepts alarm sounds shorter than 30 s, and bundled sounds are the ones it can play (the iPhone spike checks user sounds), so they keep a 1-s margin. Cutting instead of rejecting means a packaging mistake can't silence an alarm; `tool/check_licenses.dart` is where such files fail. If bad values get past `Sound`'s asserts in a release build, a start outside the file plays from the beginning and a sound without length gives an empty clip. Tests can't build such sounds, because the asserts stop them.
+- **Affects:** the ring sequence (Stage 2) is built from clips and must skip empty ones. The song importer, voice recorder and license check should take their limits from these constants. AlarmKit plays the whole bundled file, not a clip of it, so `tool/prepare_audio.sh` must still cut the files themselves to 29 s.
+
+### D10 · 2026-10-29 · The shuffle bag (task 1.3)
+- **Decision:** `ShuffleBag` in `lib/core/shuffle_bag.dart` hands out the sounds of a ring one at a time, like cards from a bag: every sound in its pool plays once per round, in random order, then the bag refills. A new round never starts with the sound that ended the last one, so no sound plays twice in a row. All randomness comes from the `Random` the caller passes in, and the bag sorts its sounds by id, so the same sounds and the same seed always give the same sequence, whatever order they come in. Each sound is picked when it is needed instead of shuffling a whole round ahead, so escalation can ask for a certain intensity and adaptive weights can weight the pick.
+- **Edge cases:** an empty pool gives no sound (`next()` returns null), and the caller decides what plays instead. A pool of one sound plays it every turn: twice in a row can't be avoided there, and the alarm must keep ringing. A pool of two takes turns (A B A B…). Sounds with the same id count as one sound, and the first one is kept, because the id names a sound in ring events, weights and the manifest.
+- **Why:** rotation only helps if every sound gets its turn before any comes back. "No repeat" counts per round: a stricter rule (a sound comes back only after every other sound has played since its last turn) would force every round into the same order, so at the seam between two rounds a sound can come back after just one other sound.
+- **Affects:** the ring sequence (Stage 2) and, later, escalation and adaptive weights. `buildRingSequence` makes the bag with `Random(seed)` and must cope with `next()` returning null. Dart's `Random` may change its numbers between SDK releases, so a sequence that must be replayed after an app update should be stored as sound ids, not as a seed.
+
+## Code and architecture
 
 ### D2 · 2026-10-29 · Strict lints with very_good_analysis (task 0.2)
 - **Decision:** `very_good_analysis` instead of `flutter_lints`, with the rule set locked to version 11.0.0 in `analysis_options.yaml`. The `public_member_api_docs` rule is off.
@@ -34,38 +78,31 @@ If a later entry replaces an earlier one, mark the old one "Replaced by Dn" inst
 - **Why:** Flutter moved Material into its own package. go_router 18 uses it and only recognizes that package's `MaterialApp`; with the old import it would fall back to plain pages without Material transitions. One Material copy also keeps theme lookups consistent.
 - **Affects:** all UI code. If a package we add still uses `package:flutter/material.dart`, wrap its widgets in `MaterialUiCompatibilityBridge` (see the material_ui README). The architecture test counts `material_ui` and `cupertino_ui` as Flutter, so `lib/core/` can't import them.
 
+## Look
+
 ### D6 · 2026-10-29 · The "Dawn" look (task 0.5)
 - **Decision:** a hand-picked palette instead of Material's generated one: a violet night sky with a warm apricot sun in dark mode, a soft peach morning in light mode (`lib/ui/theme.dart`). Fraunces (a soft serif) for titles and big numbers, Manrope for everything else, both bundled as variable fonts in `assets/fonts/` with their OFL licenses. Pages build on `DawnPage` (sky background, large title) and `EmptyState` (a sunrise illustration drawn in code). The tab bar floats as a rounded card, at most 480 px wide.
 - **Why:** the app should be easy on the eyes and not look like every other Material app. Alarms are set at night and stopped half-asleep, so dark mode is deep and warm instead of blue-white. `test/ui/theme_test.dart` keeps every text color at WCAG AA (4.5:1) on every part of the sky. The fonts are bundled so the app never contacts a font server (local-first, works offline).
-- **Affects:** every screen: take colors and text styles from the theme, never hard-coded hex values. The Credits screen (task 3.6) must list Fraunces and Manrope (OFL); `addFontLicenses()` already puts both on Flutter's licenses page.
+- **Affects:** every screen: take colors and text styles from the theme, never hard-coded hex values. The Credits screen (it comes with the music library) must list Fraunces and Manrope (OFL); `addFontLicenses()` already puts both on Flutter's licenses page.
+
+## Project, CI and release
+
+### D1 · 2026-10-28 · Project identity and theme (task 0.1)
+- **Decision:** org ID `com.adilz`, so the app IDs are `com.adilz.shuffle_alarm` (Android, Linux) and `com.adilz.shuffleAlarm` (iOS, macOS). The display name is "Shuffle Alarm" on every platform. The Material 3 theme comes from one seed color, sunrise orange `#F2994A`, with light and dark versions that follow the system setting.
+- **Why:** app IDs are hard to change after a store release. One seed color keeps every screen consistent.
+- **Affects:** store setup and signing for the public beta. The macOS `PRODUCT_NAME` is "Shuffle Alarm" (it is also the window title); this has not been built on a Mac yet.
+- **Theme replaced by D6:** the app no longer uses a seed color; the identity part still holds.
 
 ### D7 · 2026-10-29 · CI and the live web version on GitHub Pages (task 0.4)
 - **Decision:** a public repo, `adilkz21/shuffle-alarm`, with one workflow, `.github/workflows/ci.yml`. Every push runs a `dart format` check, `flutter analyze` and `flutter test` on Ubuntu with Flutter 3.47.8 and the lockfile enforced. A push to `main` that passes them builds the web app with the repo name as base href and deploys it to GitHub Pages: https://adilkz21.github.io/shuffle-alarm/. Runs on `main` wait for each other instead of cancelling, so a deploy is never cut off halfway.
 - **Why:** Pages and Actions minutes are free for public repos, so no second hosting account or secret is needed. The same Flutter version and locked packages mean CI checks exactly what was tested locally. Only the deploy job gets the Pages permissions, and it runs no third-party code; the third-party `subosito/flutter-action` is pinned to a commit. Hash URLs (D4) need no 404 rewrites on Pages.
 - **Affects:** every push: a red check means the site is not updated. Change `FLUTTER_VERSION` in the workflow together with the dev machine's Flutter. The action versions were the newest on 2026-10-29; check them when a run warns about deprecations. Code and commit authors are public.
 
-### D8 · 2026-10-29 · Core models (task 1.1)
-- **Decision:** `Alarm`, `Sound`, `RingEvent` and `RingSession` live in `lib/core/` as immutable classes that compare by value; their sets and lists are copied and can't be changed. IDs are strings: a library clip uses its id from `manifest.json`, everything else gets a generated id (AlarmKit uses UUIDs). The time of day is our own `AlarmTime`, because Flutter's `TimeOfDay` can't be used in core. `Intensity` is an enum: gentle, medium, strong = levels 1–3. Empty `repeatDays` means the alarm rings once; empty `genres` means every genre, so an alarm always has sounds to play.
-- **Rings:** a `RingEvent` is one sound that played; `timeout` means nobody tapped anything (the clip played to its end, or the ring cap ran out). A `RingSession` is one ring, from the first sound until Stop, Snooze or the cap. The ring after a Snooze is a new session with the same `dueAt`, so the rings of one morning can be grouped (Insights, experiment mode). The outcome comes from the last event: Stop → stopped, Snooze → snoozed, anything else → missed, which includes an app closed while it rang.
-- **Why:** value classes keep state and tests simple. Wrong values (hour 24, a clip start past the end) trip an `assert` in tests and debug builds but can't crash a ringing alarm in a release build; data from files and the database is checked where it is loaded. Computing the outcome from the events means the two can never disagree.
-- **Affects:** tasks 1.2–1.6 and the database (2.1). Where a sound's file is stored is not part of `Sound` yet; it comes with storage (2.1, 2.6). `lib/core` may use the pure-Dart packages `meta` and `collection`: both are from the Dart team (BSD license) and already came with Flutter, so no package versions changed.
-
-### D9 · 2026-10-29 · The clip rule (task 1.2)
-- **Decision:** `SoundClip.of(sound)` in `lib/core/sound_clip.dart` is the part of a sound that plays in one turn: from its `clipStart` to the end of the file, but at most 30 s (`SoundClip.maxLength`), or 29 s for sounds bundled with the app (`SoundClip.maxBundledLength`). It is the only way to make a `SoundClip`, so no clip can break the limits. A clip that starts close to the end of a song is just shorter; its start is not moved back. A bundled file over 29 s is cut, not rejected. The name is not `Clip`, because Flutter has a `Clip` enum that screens would then have to hide.
-- **Why:** one sound plays at most 30 s (CLAUDE.md). iOS AlarmKit only accepts alarm sounds shorter than 30 s, and bundled sounds are the ones it can play (5.1 checks user sounds), so they keep a 1-s margin. Cutting instead of rejecting means a packaging mistake can't silence an alarm; `tool/check_licenses.dart` (3.5) is where such files fail. If bad values get past `Sound`'s asserts in a release build, a start outside the file plays from the beginning and a sound without length gives an empty clip. Tests can't build such sounds, because the asserts stop them.
-- **Affects:** the ring sequence (1.6) is built from clips and must skip empty ones. The song importer (2.6), voice recorder (2.7) and license check (3.5) should take their limits from these constants. AlarmKit plays the whole bundled file, not a clip of it, so `tool/prepare_audio.sh` (3.3) must still cut the files themselves to 29 s.
-
-### D10 · 2026-10-29 · The shuffle bag (task 1.3)
-- **Decision:** `ShuffleBag` in `lib/core/shuffle_bag.dart` hands out the sounds of a ring one at a time, like cards from a bag: every sound in its pool plays once per round, in random order, then the bag refills. A new round never starts with the sound that ended the last one, so no sound plays twice in a row. All randomness comes from the `Random` the caller passes in, and the bag sorts its sounds by id, so the same sounds and the same seed always give the same sequence, whatever order they come in. Each sound is picked when it is needed instead of shuffling a whole round ahead, so escalation (1.4) can ask for a certain intensity and adaptive weights (1.5) can weight the pick.
-- **Edge cases:** an empty pool gives no sound (`next()` returns null), and the caller decides what plays instead. A pool of one sound plays it every turn: twice in a row can't be avoided there, and the alarm must keep ringing. A pool of two takes turns (A B A B…). Sounds with the same id count as one sound, and the first one is kept, because the id names a sound in ring events, weights and the manifest.
-- **Why:** rotation only helps if every sound gets its turn before any comes back. "No repeat" counts per round: a stricter rule (a sound comes back only after every other sound has played since its last turn) would force every round into the same order, so at the seam between two rounds a sound can come back after just one other sound.
-- **Affects:** 1.4–1.6. `buildRingSequence` (1.6) makes the bag with `Random(seed)` and must cope with `next()` returning null. Dart's `Random` may change its numbers between SDK releases, so a sequence that must be replayed after an app update should be stored as sound ids, not as a seed.
-
 ## Limits
 
 ### L1 · 2026-10-28 · Building on Windows
-- iOS and macOS apps can only be built, signed and tested on a Mac with Xcode (Phases 5, 6 and 8).
-- On Windows, Flutter plugins need Developer Mode (they use symlinks). Turn it on before Phase 2 adds the first plugins.
+- iOS and macOS apps can only be built, signed and tested on a Mac with Xcode (the iPhone and computer questions, and the public beta).
+- On Windows, Flutter plugins need Developer Mode (they use symlinks). Turn it on before Stage 2 adds the first plugins.
 
 ### L2 · 2026-10-29 · flutter_riverpod is not tagged for web on pub.dev
 - `flutter_riverpod` 3.x depends on `flutter_test`, which imports `dart:io`, so pub.dev marks it "not compatible with Web". The web compiler still builds `dart:io` imports (calling them would fail at runtime), and the app never calls them. Checked in task 0.3: the web release build compiles and runs.

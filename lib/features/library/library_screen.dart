@@ -3,7 +3,8 @@ import 'package:shuffle_alarm/features/settings/settings_button.dart';
 import 'package:shuffle_alarm/ui/dawn_page.dart';
 import 'package:shuffle_alarm/ui/empty_state.dart';
 
-/// The Library tab. A placeholder until the genre library (PLAN.md task 3.7).
+/// The Library tab. A placeholder until the genre library, one of the
+/// "Questions to test later" in PLAN.md.
 class LibraryScreen extends StatelessWidget {
   const new({super.key});
 

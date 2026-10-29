@@ -7,7 +7,8 @@ An alarm clock that wakes you with a rotating set of different sounds. Each soun
 One Flutter codebase for web, Android, iOS, macOS, Windows and Linux. The web version is the test version.
 
 - Web test version: https://adilkz21.github.io/shuffle-alarm/
-- Roadmap and task checklist: [PLAN.md](PLAN.md)
+- Plan, in short stages that each end with a test on real people: [PLAN.md](PLAN.md)
+- Decisions and test findings: [docs/DECISIONS.md](docs/DECISIONS.md)
 - Project rules: [CLAUDE.md](CLAUDE.md)
 
 ## Run

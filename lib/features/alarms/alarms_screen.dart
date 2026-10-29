@@ -3,7 +3,7 @@ import 'package:shuffle_alarm/features/settings/settings_button.dart';
 import 'package:shuffle_alarm/ui/dawn_page.dart';
 import 'package:shuffle_alarm/ui/empty_state.dart';
 
-/// The Alarms tab. A placeholder until the alarm list (PLAN.md task 2.2).
+/// The Alarms tab. A placeholder until the alarm list (PLAN.md, Stage 3).
 class AlarmsScreen extends StatelessWidget {
   const new({super.key});
 
