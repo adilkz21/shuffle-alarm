@@ -49,3 +49,22 @@ app.*.map.json
 
 # Claude Code personal settings
 .claude/settings.local.json
+
+# Secrets and signing keys never go to GitHub (CLAUDE.md). An example file
+# without real values may.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p8
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.mobileprovision
+key.properties
+secrets.*
+credentials.*
+google-services.json
+GoogleService-Info.plist
