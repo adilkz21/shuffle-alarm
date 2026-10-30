@@ -21,7 +21,7 @@ The plan lives in `PLAN.md`: short stages, each asking one question and ending w
 - Flutter stable, Dart, Material 3.
 - State: flutter_riverpod. Routing: go_router.
 - Storage: drift (SQLite, also on web). Simple settings: shared_preferences.
-- Audio: audioplayers (supports all 6 platforms). Recording: record. File import: file_picker.
+- Audio: audioplayers (supports all 6 platforms), but the web has its own player on one audio element for Safari on iPhones (`docs/DECISIONS.md` D17). Recording: record. File import: file_picker.
 - Alarm scheduling, always behind the `AlarmScheduler` interface:
   - Android: AlarmManager `setAlarmClock` + foreground service + full-screen intent (`alarm` package or own Kotlin plugin, decided by a spike before the Android work).
   - iOS 26+: AlarmKit via `flutter_alarmkit` or `alarm_kit` (decided by a spike on a real iPhone).
@@ -32,7 +32,7 @@ The plan lives in `PLAN.md`: short stages, each asking one question and ending w
 ## Architecture
 - `lib/core/`: pure Dart, no Flutter imports. Models, the clip rule, the shuffle bag, the ring sequence, wake-up tasks, squad codes, adaptive weights.
 - `lib/data/`: drift database, repositories, library loader for `manifest.json`.
-- `lib/platform/`: `AlarmScheduler`, `SoundPlayer` and `MotionSensor` interfaces + `android/`, `ios/`, `desktop/`, `web/` implementations.
+- `lib/platform/`: `AlarmScheduler`, `SoundPlayer`, `MotionSensor` and `ScreenAwake` interfaces + `android/`, `ios/`, `desktop/`, `web/` implementations, and `native/` for what all but the web share.
 - `lib/features/`: `alarms/`, `ringing/`, `tasks/`, `squads/`, `library/`, `voice/`, `insights/`, `settings/`.
 - `lib/ui/`: the "Clock Radio" look (colors, fonts, keys) and shared widgets such as `AppPage`, `DisplayPanel`, `EmptyState` and `KeyTabBar`. Screens take colors and text styles from the theme and sizes from `lib/ui/tokens.dart`, never hard-coded hex values (see `docs/DECISIONS.md` D15).
 - `assets/library/<genre>/`: audio clips + `manifest.json`. `tool/`: dev scripts. `test/` mirrors `lib/`.

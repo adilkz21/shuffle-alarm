@@ -14,7 +14,7 @@ final _appUriOutsideCore = RegExp('''['"]package:shuffle_alarm/(?!core/)''');
 
 /// A platform implementation; features must go through the interfaces.
 final _platformImplementationUri = RegExp(
-  '''['"]package:shuffle_alarm/platform/(android|ios|desktop|web)/''',
+  '''['"]package:shuffle_alarm/platform/(android|ios|desktop|native|web)/''',
 );
 
 void main() {

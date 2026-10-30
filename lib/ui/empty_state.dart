@@ -11,6 +11,7 @@ class EmptyState extends StatelessWidget {
     required this.caption,
     required this.title,
     required this.message,
+    this.action,
     super.key,
   });
 
@@ -23,6 +24,9 @@ class EmptyState extends StatelessWidget {
 
   final String title;
   final String message;
+
+  /// Keys under the message.
+  final Widget? action;
 
   @override
   Widget build(BuildContext context) {
@@ -75,6 +79,10 @@ class EmptyState extends StatelessWidget {
                 ),
                 textAlign: .center,
               ),
+              if (action case final action?) ...[
+                const SizedBox(height: Spacing.xl),
+                action,
+              ],
             ],
           ),
         ),

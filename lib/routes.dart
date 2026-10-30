@@ -4,7 +4,8 @@ enum AppRoute {
   alarms('/alarms'),
   library('/library'),
   insights('/insights'),
-  settings('/settings');
+  settings('/settings'),
+  ringing('/ringing');
 
   new(this.path);
 

@@ -4,7 +4,7 @@ Decisions made while building Shuffle Alarm, platform limits we ran into, and wh
 Product rules live in [CLAUDE.md](../CLAUDE.md); the stages and their questions live in [PLAN.md](../PLAN.md).
 
 How to add an entry:
-- A finding from a test with people gets the next F-number and goes at the top of "Findings", newest first. A decision gets the next D-number and goes under its topic; a platform limit gets the next L-number. Next free numbers: F1, D17, L3.
+- A finding from a test with people gets the next F-number and goes at the top of "Findings", newest first. A decision gets the next D-number and goes under its topic; a platform limit gets the next L-number. Next free numbers: F1, D18, L4.
 - Say what was decided or seen, why, and what it affects, in a few lines. A decision that follows from a test names its finding ("Why: F2").
 - Numbers never change, so links such as "DECISIONS.md (D6)" in code stay valid. If a later entry replaces an earlier one, mark the old one "Replaced by Dn" instead of deleting it.
 - Name features, not the numbers of tasks or stages that are not done yet: later stages are planned after each test, so their numbers change.
@@ -14,12 +14,12 @@ How to add an entry:
 | [Findings from tests with people](#findings-from-tests-with-people) | none yet |
 | [Product](#product) | D12 |
 | [Process and planning](#process-and-planning) | D11 |
-| [Core engine](#core-engine) | D8, D9, D10, D13, D16 |
+| [Core engine](#core-engine) | D8, D9, D10, D13, D16, D17 |
 | [Sounds](#sounds) | D14 |
 | [Code and architecture](#code-and-architecture) | D2, D3, D4, D5 |
 | [Look](#look) | D6, D15 |
 | [Project, CI and release](#project-ci-and-release) | D1, D7 |
-| [Limits](#limits) | L1, L2 |
+| [Limits](#limits) | L1, L2, L3 |
 
 ## Findings from tests with people
 
@@ -82,6 +82,16 @@ None yet: the first findings come from the Stage 2 test. Write each one like thi
 - **Which tasks can start:** `possibleWakeUpTasks` gives "Which sound" with at least 3 titles, "Catch the change" with at least 2 sounds, "Move" with a motion sensor, and "Lit key" only when nothing else is possible, so the list is never empty. The time limits are fixed for now, and the numbers above are start values too.
 - **Why:** the Stage 2 test asks whether half-awake people finish each task within a minute, so the two sound tasks get 60 s and "Move", which takes 30 s by itself, gets more room. Keeping the rules in pure Dart lets tests check every boundary and run 1000 random tasks in a moment. One fallback keeps the task simple; if testers take it every time, the data will show it.
 - **Affects:** the ringing screen creates a task on Stop and calls `update` on each tick. When `status` is `timedOut` it goes on with `easierFallback`; when it is `done` it stops the ring. During "Which sound" it must hide the sound's title, or the task answers itself. The lit key must differ in more than color (D15). A task can use up clips faster than the ring sequence planned (D13), so a ring that runs out of clips before the cap needs more. Results can read `kind`, `mistakes` and `status`, and must add up the mistakes of a task and its fallback. Picking a random task and showing each one once in the test with people is the ringing code's job.
+
+### D17 · 2026-10-30 · Trying a ring (task 2.5)
+- **Decision:** `RingRun` in `lib/core/ring_run.dart` holds the rules of one ring: which clip comes next, the task, and every way to end (`RingEnd`: task done, emergency stop, cap, snoozed). `TryRing` in `lib/features/ringing/try_ring.dart` gives it the time from one `Stopwatch` on a tick every 200 ms, plays the clips it asks for and passes on taps and sensor readings. While a ring goes on, the router sends every URL to the ringing screen, so going back in a browser can't hide it, and that screen is no use without a ring, so it then opens Alarms. A reload ends the try; nothing rings until the next tap.
+- **Try a ring:** the Alarms tab asks "Ring now" or "Within 5 minutes", which means 20 s to 5 min from the tap, so there is time to lie down. The screen doesn't show when; a snoozed ring shows its countdown, because the tester chose it. Snooze waits 5 min. `WakeUpTaskPicker` shows every possible task once before any comes back, as the test with people wants, but it forgets after a reload.
+- **On the ringing screen:** Snooze is gone during a task, so a half-awake tap can't snooze by mistake; "Try an easier task", the hold and the cap are still the ways out. The Stop key becomes "Hold 5 s to stop". The hold counts from pointer down to pointer up, so a shaky finger that slides doesn't start it over; letting go early is a plain press. It also works by holding Enter or Space and as a screen reader's long press. A bar fills along the key and the label counts down; the bar sits beside the text instead of behind it, so the label keeps its contrast on the orange. The ring appears at once, with no page sliding in.
+- **Sound:** on the web, `SoundPlayer` is our own player on one audio element instead of audioplayers, which makes a new element for each sound. Safari on an iPhone lets an element play without a tap only after it played from one, so the tap on "Try a ring" plays a silent clip on that element, and all later sounds use it. Outside the web the player is audioplayers, as CLAUDE.md says. The tap also fetches the nine clips, so a ring doesn't wait for them. A sound that fails to play gets another try a second later with the next clip, and the screen says so and offers "Turn the sound on", a tap the browser accepts. With no sound to play, it plays the Alarm Clock file (D13). A clip ends at the player's "ended" event or by the clock, whichever comes first, so a clip stays within the clip rule even if the event is lost.
+- **Motion:** on the web, `MotionSensor` reads the browser's `devicemotion` event, with gravity included, because sensors_plus uses an API that Safari lacks and never asks for permission. "Move" is offered only when a real reading arrives within 1.5 s of the tap; computers send none, or an empty one. Where the browser has `DeviceMotionEvent.requestPermission`, a short screen explains first, and "Skip the Move task" still rings. Chromium has that method now, so computers show this screen too, even without a sensor. Outside the web there is no sensor yet, so the apps get the sound tasks; the Android work should add one behind the same interface.
+- **Screen:** `ScreenAwake` keeps the screen on while a ring is on its way or going on, with the browser's Screen Wake Lock, asked for again when the tab comes back. A phone that goes to sleep stops a web page, and the ring would never come. wakelock_plus needs an extra JS file on the web. Outside the web it does nothing yet.
+- **Why:** rules in pure Dart can be tested at every boundary in a moment; the screens stay thin. The Stage 2 test has people lying down for up to 5 minutes with a phone, so waiting has to survive that.
+- **Affects:** results (2.6) read `RingRun.end`, `endedAt`, `task.kind` and `task.mistakes`, and must add up the mistakes of a task and its fallback; `TryRing` drops the run when it ends, so results must collect them first. Real alarms can reuse `RingRun` and the screen. `lib/platform/native/` holds what all but the web share, and the folder test guards it. Motion and sound on real phones, and audioplayers outside the web, are not yet checked (see the progress log).
 
 ## Sounds
 
@@ -151,3 +161,7 @@ None yet: the first findings come from the Stage 2 test. Write each one like thi
 ### L2 · 2026-10-29 · flutter_riverpod is not tagged for web on pub.dev
 - `flutter_riverpod` 3.x depends on `flutter_test`, which imports `dart:io`, so pub.dev marks it "not compatible with Web". The web compiler still builds `dart:io` imports (calling them would fail at runtime), and the app never calls them. Checked in task 0.3: the web release build compiles and runs.
 - If a future version really breaks the web, pin the last working version.
+
+### L3 · 2026-10-30 · Tests run on the Dart VM, the app in a browser
+- `flutter test` runs on the Dart VM, where integers have 64 bits. In a browser they are JavaScript numbers, and shifts work on 32 bits: `1 << 32` is 0, so `Random.nextInt(1 << 32)` passed every test and stopped the first ring in the web build. Task 2.5 found this only by ringing in a browser.
+- So anything in `lib/core/` that does bit work or uses big numbers must be tried in the web build. `flutter test --platform chrome` would catch it, but with Edge as `CHROME_EXECUTABLE` on this machine it stops with "Connection closed before test suite loaded", so it isn't in use yet.

@@ -28,6 +28,8 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+  # Plays the ring's sounds outside the browser (the web has its own player).
+  audioplayers: ^6.8.1
   # Set and list equality for the models in lib/core (pure Dart).
   collection: ^1.19.1
   # The following adds the Cupertino Icons font to your application.
@@ -41,6 +43,8 @@ dependencies:
   material_ui: ^1.8.0
   # @immutable for the models in lib/core (pure Dart).
   meta: ^1.18.3
+  # Browser APIs for the web sound player, motion sensor and wake lock.
+  web: ^1.1.1
 
 dev_dependencies:
   flutter_test:
