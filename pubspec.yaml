@@ -57,8 +57,8 @@ flutter:
 
   assets:
     # Font licenses, shown on the licenses page (see lib/ui/fonts.dart).
-    - assets/fonts/fraunces/OFL.txt
-    - assets/fonts/manrope/OFL.txt
+    - assets/fonts/martian_mono/OFL.txt
+    - assets/fonts/onest/OFL.txt
     # The sound library: manifest.json and one folder per genre. A folder
     # listed here doesn't take its subfolders, so each genre needs a line.
     - assets/library/
@@ -67,9 +67,9 @@ flutter:
   # Bundled, so the app never fetches fonts at runtime. Both are variable
   # fonts; lib/ui/theme.dart sets their weight with FontVariation.
   fonts:
-    - family: Fraunces
+    - family: Martian Mono
       fonts:
-        - asset: assets/fonts/fraunces/Fraunces-VariableFont.ttf
-    - family: Manrope
+        - asset: assets/fonts/martian_mono/MartianMono-VariableFont.ttf
+    - family: Onest
       fonts:
-        - asset: assets/fonts/manrope/Manrope-VariableFont.ttf
+        - asset: assets/fonts/onest/Onest-VariableFont.ttf

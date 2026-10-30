@@ -1,19 +1,20 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
-/// Soft serif for page titles, headings and big numbers.
-const serifFamily = 'Fraunces';
+/// Monospace for digits, codes and key labels: the clock radio's display
+/// and the writing on its keys.
+const displayFamily = 'Martian Mono';
 
-/// Clean sans-serif for everything else.
-const sansFamily = 'Manrope';
+/// Sans-serif for titles and everything else.
+const textFamily = 'Onest';
 
 /// Adds the bundled fonts' OFL licenses to the app's licenses page. The
 /// license requires them to travel with the fonts.
 void addFontLicenses() {
   LicenseRegistry.addLicense(() async* {
     for (final (family, folder) in const [
-      (serifFamily, 'fraunces'),
-      (sansFamily, 'manrope'),
+      (displayFamily, 'martian_mono'),
+      (textFamily, 'onest'),
     ]) {
       final text = await rootBundle.loadString('assets/fonts/$folder/OFL.txt');
       yield LicenseEntryWithLineBreaks([family], text);

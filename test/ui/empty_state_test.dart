@@ -1,15 +1,17 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:shuffle_alarm/ui/display_panel.dart';
 import 'package:shuffle_alarm/ui/empty_state.dart';
 import 'package:shuffle_alarm/ui/theme.dart';
 
 Future<void> _show(WidgetTester tester) async {
   await tester.pumpWidget(
     MaterialApp(
-      theme: dawnTheme(.light),
+      theme: clockRadioTheme(.light),
       home: const Scaffold(
         body: EmptyState(
-          icon: Icons.alarm_rounded,
+          readout: '--:--',
+          caption: 'No alarm set',
           title: 'No alarms yet',
           message: 'Each one plays a new sound every 30 seconds.',
         ),
@@ -18,16 +20,31 @@ Future<void> _show(WidgetTester tester) async {
   );
 }
 
+Finder _onDisplay(String text) =>
+    find.descendant(of: find.byType(DisplayPanel), matching: find.text(text));
+
 void main() {
-  testWidgets('shows the illustration, title and message', (tester) async {
+  testWidgets('shows the display, a title and a message', (tester) async {
     await _show(tester);
 
-    expect(find.byIcon(Icons.alarm_rounded), findsOneWidget);
+    expect(_onDisplay('--:--'), findsOneWidget);
+    expect(_onDisplay('NO ALARM SET'), findsOneWidget);
     expect(find.text('No alarms yet'), findsOneWidget);
     expect(
       find.text('Each one plays a new sound every 30 seconds.'),
       findsOneWidget,
     );
+  });
+
+  testWidgets('screen readers hear the caption, not the dashes', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    await _show(tester);
+
+    expect(find.bySemanticsLabel('--:--'), findsNothing);
+    expect(find.bySemanticsLabel('No alarm set'), findsOneWidget);
+    semantics.dispose();
   });
 
   testWidgets('fits a small phone with large text', (tester) async {

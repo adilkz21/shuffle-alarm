@@ -14,11 +14,13 @@ void main() {
 
     expect(
       entries.expand((entry) => entry.packages),
-      containsAll([serifFamily, sansFamily]),
+      containsAll([displayFamily, textFamily]),
     );
     for (final entry in entries) {
       final text = entry.paragraphs.map((p) => p.text).join(' ');
       expect(text, contains('SIL Open Font License'));
+      // Each font travels with its own license, not the other one's.
+      expect(text, contains(entry.packages.single));
     }
   });
 }

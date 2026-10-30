@@ -4,7 +4,7 @@ Decisions made while building Shuffle Alarm, platform limits we ran into, and wh
 Product rules live in [CLAUDE.md](../CLAUDE.md); the stages and their questions live in [PLAN.md](../PLAN.md).
 
 How to add an entry:
-- A finding from a test with people gets the next F-number and goes at the top of "Findings", newest first. A decision gets the next D-number and goes under its topic; a platform limit gets the next L-number. Next free numbers: F1, D15, L3.
+- A finding from a test with people gets the next F-number and goes at the top of "Findings", newest first. A decision gets the next D-number and goes under its topic; a platform limit gets the next L-number. Next free numbers: F1, D16, L3.
 - Say what was decided or seen, why, and what it affects, in a few lines. A decision that follows from a test names its finding ("Why: F2").
 - Numbers never change, so links such as "DECISIONS.md (D6)" in code stay valid. If a later entry replaces an earlier one, mark the old one "Replaced by Dn" instead of deleting it.
 - Name features, not the numbers of tasks or stages that are not done yet: later stages are planned after each test, so their numbers change.
@@ -17,7 +17,7 @@ How to add an entry:
 | [Core engine](#core-engine) | D8, D9, D10, D13 |
 | [Sounds](#sounds) | D14 |
 | [Code and architecture](#code-and-architecture) | D2, D3, D4, D5 |
-| [Look](#look) | D6 |
+| [Look](#look) | D6, D15 |
 | [Project, CI and release](#project-ci-and-release) | D1, D7 |
 | [Limits](#limits) | L1, L2 |
 
@@ -111,6 +111,13 @@ None yet: the first findings come from the Stage 2 test. Write each one like thi
 - **Decision:** a hand-picked palette instead of Material's generated one: a violet night sky with a warm apricot sun in dark mode, a soft peach morning in light mode (`lib/ui/theme.dart`). Fraunces (a soft serif) for titles and big numbers, Manrope for everything else, both bundled as variable fonts in `assets/fonts/` with their OFL licenses. Pages build on `DawnPage` (sky background, large title) and `EmptyState` (a sunrise illustration drawn in code). The tab bar floats as a rounded card, at most 480 px wide.
 - **Why:** the app should be easy on the eyes and not look like every other Material app. Alarms are set at night and stopped half-asleep, so dark mode is deep and warm instead of blue-white. `test/ui/theme_test.dart` keeps every text color at WCAG AA (4.5:1) on every part of the sky. The fonts are bundled so the app never contacts a font server (local-first, works offline).
 - **Affects:** every screen: take colors and text styles from the theme, never hard-coded hex values. The Credits screen (it comes with the music library) must list Fraunces and Manrope (OFL); `addFontLicenses()` already puts both on Flutter's licenses page.
+- **Replaced by D15:** the palette, Fraunces and Manrope, `DawnPage`, the sunrise empty states and the floating tab bar. Still true: the fonts are bundled and never fetched, and a test keeps text contrast at WCAG AA.
+
+### D15 · 2026-10-30 · The "Clock Radio" look
+- **Decision:** the app looks like a well-made bedside clock radio instead of "Dawn" (D6). Every action is a physical key: it has an edge under its face and sinks the moment it is pressed. `KeyBorder` (`lib/ui/key_border.dart`) draws it, and the component themes use it, so `FilledButton` is the orange main key, `OutlinedButton` a neutral key and `IconButton` a small square key; `TextButton` stays a quiet underlined link. Times, sounds and codes show on a dark display with amber digits (`DisplayPanel`), dark in both modes. The body is a warm light gray in light mode and graphite in dark mode; the only bright colors are the amber digits and the orange main key. Fonts: Martian Mono for digits, codes and key labels, Onest for the rest, both bundled as variable fonts with their OFL licenses. The tabs are keys in a tray (`KeyTabBar`): the open tab stays pressed and its dot lights up, like a radio's preset button. A page with nothing to show yet has dashes on its display, like a clock that isn't set (`EmptyState`). Pages are flat and build on `AppPage`, which draws its own header, so large text never squeezes it.
+- **Why:** on 2026-10-30 the user found Dawn, and its buttons most of all, banal: they were Material's own, and every page centered the same picture. People use an alarm half-awake, so keys are big (main keys at least 60 px high, tabs 64 px, icon keys 52 × 56), show their press, and the open tab differs in shape and light, not only in color. At night little is bright, so the screen doesn't dazzle. Keys and a display also suit the product: a new sound every 30 s is like a new station, and squad codes read naturally on a display. It sets the app apart from the flat screens of phone clock apps.
+- **Rules:** colors come from `ColorScheme` and the `DeviceColors` theme extension, text styles from `TextTheme`, sizes from `Spacing`, `Corners` and `KeyMetrics` (`lib/ui/tokens.dart`); screens never use hex values, raw sizes or brightness checks. A screen has at most one orange key, its main action. A Material component gets a component theme in `lib/ui/theme.dart` before a screen first uses it. Keys move at once, as a real key does, with the platform's click and no ripple; nothing blinks or loops. Density is fixed to standard, so keys keep their size on desktop and web. `test/ui/theme_test.dart` keeps every text color at WCAG AA (4.5:1) on each surface it can sit on, and key outlines, the focus ring and the lit dot at 3:1 against what is around them (WCAG 1.4.11).
+- **Affects:** every screen. The ringing screen shows the time and the playing sound on a `DisplayPanel`, Stop as the orange key and Snooze as a neutral key; holding Stop for the emergency stop fills the key over 5 s. Wake-up task answers are neutral keys, and squad codes are display digits. The Credits screen must list Onest and Martian Mono (OFL); `addFontLicenses()` puts both on Flutter's licenses page, which Settings opens with "View licenses".
 
 ## Project, CI and release
 

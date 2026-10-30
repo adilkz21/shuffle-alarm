@@ -3,7 +3,8 @@ import 'package:material_ui/material_ui.dart';
 import 'package:shuffle_alarm/router.dart';
 import 'package:shuffle_alarm/ui/theme.dart';
 
-/// Root widget: app name, the Dawn light and dark themes, and the router.
+/// Root widget: app name, the Clock Radio light and dark themes, and the
+/// router.
 class ShuffleAlarmApp extends ConsumerWidget {
   const new({super.key});
 
@@ -14,8 +15,8 @@ class ShuffleAlarmApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp.router(
       title: title,
-      theme: dawnTheme(.light),
-      darkTheme: dawnTheme(.dark),
+      theme: clockRadioTheme(.light),
+      darkTheme: clockRadioTheme(.dark),
       routerConfig: ref.watch(routerProvider),
     );
   }

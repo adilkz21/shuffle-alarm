@@ -2,9 +2,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:shuffle_alarm/app.dart';
+import 'package:shuffle_alarm/ui/key_tab_bar.dart';
+import 'package:shuffle_alarm/ui/tokens.dart';
 
 void main() {
-  testWidgets('the tab bar floats and stays narrow on wide screens', (
+  testWidgets('the tab tray floats and stays narrow on wide screens', (
     tester,
   ) async {
     tester.view
@@ -15,9 +17,9 @@ void main() {
     await tester.pumpWidget(const ProviderScope(child: ShuffleAlarmApp()));
     await tester.pumpAndSettle();
 
-    final bar = tester.getRect(find.byType(NavigationBar));
-    expect(bar.width, lessThanOrEqualTo(480));
-    expect(bar.center.dx, closeTo(800, 1));
-    expect(bar.bottom, lessThan(1000));
+    final tray = tester.getRect(find.byType(KeyTabBar));
+    expect(tray.width, lessThanOrEqualTo(MaxWidths.tabBar));
+    expect(tray.center.dx, closeTo(800, 1));
+    expect(tray.bottom, lessThan(1000));
   });
 }
